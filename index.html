@@ -1,0 +1,24 @@
+# Create the HTML file
+@"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ossuary Drop Simulator</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <script src="https://unpkg.com/react@17/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@17/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+  <script src="https://unpkg.com/recharts/umd/Recharts.min.js"></script>
+</head>
+<body style="background-color: #2c2d31; margin: 0; padding: 0;">
+  <div id="root"></div>
+  
+  <script type="text/babel" src="App.js"></script>
+  <script type="text/babel">
+    ReactDOM.render(<OssuarySimulator />, document.getElementById('root'));
+  </script>
+</body>
+</html>
+"@ | Out-File -FilePath index.html -Encoding utf8
