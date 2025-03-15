@@ -25,14 +25,19 @@
       padding: 0;
     }
     
+    html, body {
+      height: 100%;
+      width: 100%;
+      overflow: hidden;
+    }
+    
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       background-color: var(--background);
       color: var(--text-primary);
       line-height: 1.6;
       display: flex;
-      min-height: 100vh;
-      overflow-x: hidden;
+      flex-direction: row;
     }
     
     /* Sidebar Styles */
@@ -41,16 +46,12 @@
       background-color: var(--background-tertiary);
       padding: 1.5rem 1rem;
       flex-shrink: 0;
-      height: 100vh;
-      position: sticky;
-      top: 0;
+      height: 100%;
       overflow-y: auto;
     }
     
     .sidebar-header {
       margin-bottom: 1.5rem;
-      padding-bottom: 1rem;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     }
     
     .sidebar-header h1 {
@@ -99,12 +100,11 @@
     /* Main Content Styles */
     .main-content {
       flex: 1;
-      max-width: calc(100% - 250px);
-      height: 100vh;
+      height: 100%;
       overflow: hidden;
     }
     
-    .content-iframe {
+    #content-frame {
       width: 100%;
       height: 100%;
       border: none;
@@ -119,12 +119,11 @@
       .sidebar {
         width: 100%;
         height: auto;
-        position: relative;
+        max-height: 200px;
       }
       
       .main-content {
-        max-width: 100%;
-        height: calc(100vh - 150px);
+        height: calc(100% - 200px);
       }
     }
   </style>
@@ -137,31 +136,27 @@
     </div>
     
     <div class="nav-section">
-      <h2 class="nav-section-title">Simulators</h2>
+      <h2 class="nav-section-title">SIMULATORS</h2>
       <ul class="nav-links">
-        <li><a id="ossuary-link" class="nav-link active" onclick="loadSimulator('ossuary-simulator.html')">Ossuary Drop Simulator</a></li>
+        <li><a id="ossuary-link" class="nav-link active">Ossuary Drop Simulator</a></li>
       </ul>
     </div>
   </div>
   
   <!-- Main Content (iframe for embedding) -->
   <div class="main-content">
-    <iframe id="content-frame" class="content-iframe" src="ossuary-simulator.html"></iframe>
+    <iframe id="content-frame" src="ossuary-simulator.html" frameborder="0" allowfullscreen></iframe>
   </div>
 
   <script>
-    function loadSimulator(url) {
-      // Update iframe source
-      document.getElementById('content-frame').src = url;
+    document.getElementById('ossuary-link').addEventListener('click', function() {
+      document.getElementById('content-frame').src = 'ossuary-simulator.html';
       
-      // Update active link
-      document.querySelectorAll('.nav-link').forEach(link => {
-        link.classList.remove('active');
-      });
-      document.getElementById('ossuary-link').classList.add('active');
-    }
-    
-    // Load the ossuary simulator by default (already set in HTML)
+      // Update active state
+      const navLinks = document.querySelectorAll('.nav-link');
+      navLinks.forEach(link => link.classList.remove('active'));
+      this.classList.add('active');
+    });
   </script>
 </body>
 </html>
