@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Ossuary Item Drop Simulator</title>
-  <!-- CDN imports for Chart.js -->
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Ossuary Simulator</title>
+
+  <!-- CDN for Chart.js -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+
   <style>
     /* Discord-inspired dark theme */
     :root {
@@ -20,859 +22,714 @@
       --green: #3ba55c;
       --yellow: #faa61a;
     }
-    
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
     }
-    
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       background-color: var(--background);
       color: var(--text-primary);
       line-height: 1.6;
     }
-    
     .container {
       max-width: 1200px;
       margin: 0 auto;
-      padding: 1rem;
+      padding:1rem;
     }
-    
-    h1, h2, h3, h4 {
-      margin-bottom: 1rem;
+    h1, h2, h3 {
+      margin-bottom:1rem;
       color: var(--text-primary);
     }
-    
     .card {
       background-color: var(--background-secondary);
       border-radius: 8px;
-      padding: 1.5rem;
-      margin-bottom: 1.5rem;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+      padding:1.5rem;
+      margin-bottom:1.5rem;
+      box-shadow:0 2px 10px rgba(0,0,0,0.2);
     }
-    
     .grid {
-      display: grid;
-      gap: 1.5rem;
+      display:grid;
+      gap:1.5rem;
     }
-    
     .grid-2 {
-      grid-template-columns: 1fr;
+      grid-template-columns:1fr;
     }
-    
-    .grid-3 {
-      grid-template-columns: 1fr;
-    }
-    
-    @media (min-width: 768px) {
+    @media(min-width:768px){
       .grid-2 {
         grid-template-columns: 1fr 1fr;
       }
-      
-      .grid-3 {
-        grid-template-columns: 1fr 1fr 1fr;
-      }
     }
-    
-    input[type="number"] {
-      background-color: #4f545c;
-      color: var(--text-primary);
-      border: none;
-      padding: 0.5rem;
-      border-radius: 4px;
-      width: 100%;
-      margin-bottom: 1rem;
+    input[type="number"]{
+      background-color:#4f545c;
+      color:var(--text-primary);
+      border:none;
+      padding:0.5rem;
+      border-radius:4px;
+      width:100%;
+      margin-bottom:1rem;
     }
-    
-    button {
-      background-color: var(--blurple);
-      color: white;
-      border: none;
-      padding: 0.5rem 1rem;
-      border-radius: 4px;
-      cursor: pointer;
-      transition: background-color 0.2s;
+    button{
+      background-color:var(--blurple);
+      color:white;
+      border:none;
+      padding:0.5rem 1rem;
+      border-radius:4px;
+      cursor:pointer;
+      transition:background-color 0.2s;
     }
-    
-    button:hover {
-      background-color: #4752c4;
+    button:hover{
+      background-color:#4752c4;
     }
-    
-    button:disabled {
+    button:disabled{
       background-color: var(--text-muted);
-      cursor: not-allowed;
+      cursor:not-allowed;
     }
-    
-    label {
-      display: block;
-      margin-bottom: 0.5rem;
-      color: var(--text-secondary);
+    label{
+      display:block;
+      margin-bottom:0.5rem;
+      color:var(--text-secondary);
     }
-    
-    .form-group {
-      margin-bottom: 1rem;
+    .form-group{
+      margin-bottom:1rem;
     }
-    
-    .error {
-      color: var(--red);
-      margin-bottom: 0.5rem;
-      font-size: 0.9rem;
+    .error{
+      color:var(--red);
+      margin-bottom:0.5rem;
+      font-size:0.9rem;
     }
-    
-    table {
-      width: 100%;
-      border-collapse: collapse;
+    table{
+      width:100%;
+      border-collapse:collapse;
     }
-    
-    th, td {
-      padding: 0.5rem;
-      text-align: left;
-      border: 1px solid #555;
+    th, td{
+      padding:0.5rem;
+      border:1px solid #555;
     }
-    
-    th {
+    th{
       background-color: var(--background-tertiary);
     }
-    
-    tr:nth-child(even) {
-      background-color: rgba(255, 255, 255, 0.05);
+    tr:nth-child(even){
+      background-color: rgba(255,255,255,0.05);
     }
-    
-    .chart-container {
-      position: relative;
-      height: 350px;
-      width: 100%;
+    .chart-container{
+      position:relative;
+      height:350px;
+      width:100%;
     }
-    
-    .percentile-card {
-      padding: 1rem;
-      border-radius: 4px;
-      border-width: 2px;
-      border-style: solid;
+    .text-right{ text-align:right; }
+    .text-center{text-align:center;}
+    .checkbox-container{
+      display:flex;
+      align-items:center;
+      margin-bottom:1rem;
     }
-    
+    .checkbox-container input{
+      margin-right:0.5rem;
+      accent-color:var(--blurple);
+    }
+
+    /* Percentile boxes */
+    .percentile-card{
+      padding:1rem;
+      border-radius:4px;
+      border-width:2px;
+      border-style:solid;
+      margin-bottom:1rem;
+    }
     .percentile-card.unlucky {
-      background-color: rgba(237, 66, 69, 0.1);
+      background-color:rgba(237,66,69,0.1);
       border-color: var(--red);
     }
-    
     .percentile-card.average {
-      background-color: rgba(250, 166, 26, 0.1);
+      background-color:rgba(250,166,26,0.1);
       border-color: var(--yellow);
     }
-    
     .percentile-card.lucky {
-      background-color: rgba(59, 165, 92, 0.1);
+      background-color:rgba(59,165,92,0.1);
       border-color: var(--green);
-    }
-    
-    .note {
-      background-color: var(--background-tertiary);
-      padding: 1rem;
-      border-radius: 4px;
-      color: var(--text-secondary);
-      font-size: 0.9rem;
-    }
-    
-    .text-center {
-      text-align: center;
-    }
-    
-    .text-right {
-      text-align: right;
-    }
-    
-    .text-muted {
-      color: var(--text-secondary);
-    }
-    
-    .mb-1 {
-      margin-bottom: 0.5rem;
-    }
-    
-    .mb-2 {
-      margin-bottom: 1rem;
-    }
-    
-    .mb-3 {
-      margin-bottom: 1.5rem;
-    }
-    
-    .flex {
-      display: flex;
-    }
-    
-    .justify-between {
-      justify-content: space-between;
-    }
-    
-    .items-center {
-      align-items: center;
-    }
-    
-    .checkbox-container {
-      display: flex;
-      align-items: center;
-      margin-bottom: 1rem;
-    }
-    
-    .checkbox-container input {
-      margin-right: 0.5rem;
-      accent-color: var(--blurple);
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>Ossuary Item Drop Simulator</h1>
-    
-    <!-- Simulation Configuration Card -->
-    <div class="card mb-3">
+    <h1>Ossuary Simulator</h1>
+
+    <!-- Simulation Configuration -->
+    <div class="card">
       <h2>Simulation Configuration</h2>
-      
-      <!-- Drop Rates Configuration -->
-      <div class="mb-2">
-        <h3>Talisman Drop Rates (%)</h3>
-        <div class="grid grid-2" id="dropRatesInputs">
-          <!-- Inputs will be added dynamically via JavaScript -->
-        </div>
-        
-        <div id="rateError" class="error"></div>
-        
-        <div class="text-muted mb-3" id="totalRate">
-          Total: 100% (must equal 100%)
-        </div>
+
+      <label>Talisman Drop Rates (%)</label>
+      <div class="grid grid-2" id="dropRatesInputs"></div>
+      <div id="rateError" class="error"></div>
+      <div id="totalRate" style="color:var(--text-secondary); margin-bottom:1rem;">
+        Total: 100% (must equal 100%)
       </div>
-      
+
       <div class="grid grid-2">
         <div class="form-group">
           <label for="numChests">Number of Chests per Player</label>
-          <input
-            type="number"
-            id="numChests"
-            min="1"
-            max="1000"
-            value="10"
-          />
+          <input type="number" id="numChests" min="1" max="1000" value="10"/>
         </div>
-        
         <div class="form-group">
           <label for="numSimulations">Number of Simulated Players</label>
-          <input
-            type="number"
-            id="numSimulations"
-            min="1"
-            max="10000"
-            value="100"
-          />
+          <input type="number" id="numSimulations" min="1" max="10000" value="100"/>
         </div>
       </div>
-      
+
+      <div class="form-group">
+        <label for="ossuaryPrice">Ossuary Price</label>
+        <input type="number" id="ossuaryPrice" min="1" value="240"/>
+      </div>
+
       <button id="runSimulation">Run Simulation</button>
     </div>
-    
-    <!-- Results Grid -->
+
+    <!-- Results: Expected vs Actual & Distribution -->
     <div class="grid grid-2">
-      <!-- Expected vs Actual Drops -->
       <div class="card">
         <h2>Expected vs. Actual Drop Rates</h2>
-        <div class="table-container">
-          <table id="dropRatesTable">
-            <thead>
-              <tr>
-                <th>Item</th>
-                <th class="text-right">Expected %</th>
-                <th class="text-right">Actual %</th>
-                <th class="text-right">Avg Items per Player</th>
-              </tr>
-            </thead>
-            <tbody>
-              <!-- Table rows will be added dynamically -->
-            </tbody>
-          </table>
-        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Item</th>
+              <th class="text-right">Expected %</th>
+              <th class="text-right">Actual %</th>
+              <th class="text-right">Avg per Player</th>
+            </tr>
+          </thead>
+          <tbody id="dropRatesTable"></tbody>
+        </table>
       </div>
-      
-      <!-- Distribution of Final Averages -->
       <div class="card">
         <h2>Distribution of Final Averages</h2>
         <div class="chart-container">
           <canvas id="distributionChart"></canvas>
         </div>
-        <div class="text-center text-muted mt-2">
+        <div style="text-align:center; color:var(--text-secondary); margin-top:0.5rem;">
           Average Talisman % after <span id="chestsCount">10</span> chests
         </div>
       </div>
     </div>
-    
+
     <!-- Player Journey Analysis -->
     <div class="card">
-      <div class="flex justify-between items-center mb-2">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
         <h2>Player Journey Analysis</h2>
         <div class="checkbox-container">
-          <input
-            type="checkbox"
-            id="showPercentiles"
-            checked
-          />
+          <input type="checkbox" id="showPercentiles" checked/>
           <label for="showPercentiles">Show Luck Percentiles</label>
         </div>
       </div>
-      
+
       <h3>Average Value Progression</h3>
-      
-      <div class="chart-container mb-3">
+      <div class="chart-container" style="margin-bottom:1rem;">
         <canvas id="journeyChart"></canvas>
       </div>
-      
+
       <h3>Player Experience Insights</h3>
-      <div class="grid grid-3">
+      <div class="grid grid-2" style="grid-template-columns:1fr 1fr 1fr; gap:1rem;">
+        <!-- 3 percentile boxes (5th, 50th, 95th) -->
         <div class="percentile-card unlucky">
           <h4>Unlucky Players (5th percentile)</h4>
-          <p class="text-muted">Final Average: <strong id="unluckyAvg">0%</strong></p>
-          <p class="text-muted">Expected +50% items: <strong id="unluckyExpected">0</strong></p>
-          <p class="text-muted">Actual +50% items: <strong id="unluckyActual">0</strong></p>
+          <p>Final Average: <strong id="unluckyAvg">0%</strong></p>
         </div>
-        
         <div class="percentile-card average">
           <h4>Average Players (50th percentile)</h4>
-          <p class="text-muted">Final Average: <strong id="avgAvg">0%</strong></p>
-          <p class="text-muted">Expected +50% items: <strong id="avgExpected">0</strong></p>
-          <p class="text-muted">Actual +50% items: <strong id="avgActual">0</strong></p>
+          <p>Final Average: <strong id="avgAvg">0%</strong></p>
         </div>
-        
         <div class="percentile-card lucky">
           <h4>Lucky Players (95th percentile)</h4>
-          <p class="text-muted">Final Average: <strong id="luckyAvg">0%</strong></p>
-          <p class="text-muted">Expected +50% items: <strong id="luckyExpected">0</strong></p>
-          <p class="text-muted">Actual +50% items: <strong id="luckyActual">0</strong></p>
+          <p>Final Average: <strong id="luckyAvg">0%</strong></p>
         </div>
       </div>
     </div>
-    
-    <div class="note mb-3">
-      <p><strong>Note:</strong> This simulation helps you understand the player experience based on your configured drop rates. The color-coded lines show different luck levels, with the 5th percentile in red (unlucky players), 50th percentile in yellow (average players), and 95th percentile in green (lucky players).</p>
+
+    <!-- Ratio-based Effective Cost Table -->
+    <div class="card">
+      <h2>Effective Cost (Ratio-based)</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Talisman</th>
+            <th class="text-right">Theoretical Cost</th>
+            <th class="text-right">Empirical Cost</th>
+          </tr>
+        </thead>
+        <tbody id="ratioCostTable"></tbody>
+      </table>
     </div>
   </div>
 
   <script>
-    // Initialize simulator state
-    const state = {
-      numSimulations: 100,
-      numChests: 10,
-      rates: {
-        "+20% Talisman": 50,
-        "+25% Talisman": 45, 
-        "+30% Talisman": 4.9,
-        "+50% Talisman": 0.1
+    const state={
+      // default rates
+      rates:{
+        '+20% Talisman':50,
+        '+25% Talisman':45,
+        '+30% Talisman':4.9,
+        '+50% Talisman':0.1
       },
-      items: [], // Will be calculated from rates
-      simulationResults: null,
-      showPercentiles: true,
-      charts: {
-        distribution: null,
-        journey: null
+      numChests:10,
+      numSimulations:100,
+      ossuaryPrice:240,
+      items:[],
+      simulationResults:null,
+      showPercentiles:true,
+      charts:{
+        distribution:null,
+        journey:null
       }
     };
-    
-    // DOM References
-    const elements = {
+
+    // DOM
+    const els={
       dropRatesInputs: document.getElementById('dropRatesInputs'),
       totalRate: document.getElementById('totalRate'),
       rateError: document.getElementById('rateError'),
       numChests: document.getElementById('numChests'),
       numSimulations: document.getElementById('numSimulations'),
+      ossuaryPrice: document.getElementById('ossuaryPrice'),
       runSimulation: document.getElementById('runSimulation'),
       dropRatesTable: document.getElementById('dropRatesTable'),
       distributionChart: document.getElementById('distributionChart'),
       journeyChart: document.getElementById('journeyChart'),
       showPercentiles: document.getElementById('showPercentiles'),
       chestsCount: document.getElementById('chestsCount'),
-      // Percentile card elements
+      // percentile boxes
       unluckyAvg: document.getElementById('unluckyAvg'),
-      unluckyExpected: document.getElementById('unluckyExpected'),
-      unluckyActual: document.getElementById('unluckyActual'),
       avgAvg: document.getElementById('avgAvg'),
-      avgExpected: document.getElementById('avgExpected'),
-      avgActual: document.getElementById('avgActual'),
       luckyAvg: document.getElementById('luckyAvg'),
-      luckyExpected: document.getElementById('luckyExpected'),
-      luckyActual: document.getElementById('luckyActual')
+      ratioCostTable: document.getElementById('ratioCostTable')
     };
-    
-    // Initialize drop rate inputs
-    function initDropRateInputs() {
-      elements.dropRatesInputs.innerHTML = '';
-      
-      for (const itemName in state.rates) {
-        const div = document.createElement('div');
-        
-        const label = document.createElement('label');
-        label.textContent = itemName;
-        
-        const input = document.createElement('input');
-        input.type = 'number';
-        input.min = '0';
-        input.max = '100';
-        input.step = '0.1';
-        input.value = state.rates[itemName];
-        input.addEventListener('input', (e) => {
-          const value = parseFloat(e.target.value);
-          state.rates[itemName] = value;
+
+    // 1) Drop Rate UI
+    function initDropRateInputs(){
+      els.dropRatesInputs.innerHTML='';
+      for(const [nm,val] of Object.entries(state.rates)){
+        const div=document.createElement('div');
+        const lab=document.createElement('label');
+        lab.textContent= nm;
+        const inp=document.createElement('input');
+        inp.type='number'; inp.min='0'; inp.max='100'; inp.step='0.1';
+        inp.value= val;
+        inp.addEventListener('input', e=>{
+          state.rates[nm]= parseFloat(e.target.value);
           updateTotalRate();
         });
-        
-        div.appendChild(label);
-        div.appendChild(input);
-        elements.dropRatesInputs.appendChild(div);
+        div.appendChild(lab);
+        div.appendChild(inp);
+        els.dropRatesInputs.appendChild(div);
       }
-      
       updateTotalRate();
     }
-    
-    // Update total rate display
-    function updateTotalRate() {
-      const total = Object.values(state.rates).reduce((sum, rate) => sum + rate, 0);
-      elements.totalRate.textContent = `Total: ${total.toFixed(1)}% (must equal 100%)`;
-      
-      if (Math.abs(total - 100) > 0.01) {
-        elements.rateError.textContent = `Total rates must equal 100%. Current total: ${total.toFixed(1)}%`;
-        elements.runSimulation.disabled = true;
+    function updateTotalRate(){
+      const sum= Object.values(state.rates).reduce((a,b)=>a+b,0);
+      els.totalRate.textContent=`Total: ${sum.toFixed(1)}% (must equal 100%)`;
+      if(Math.abs(sum-100)>0.01){
+        els.rateError.textContent=`Total must be 100%. Currently ${sum.toFixed(1)}%`;
+        els.runSimulation.disabled=true;
       } else {
-        elements.rateError.textContent = '';
-        elements.runSimulation.disabled = false;
+        els.rateError.textContent='';
+        els.runSimulation.disabled=false;
       }
     }
-    
-    // Convert rates to items
-    function ratesToItems() {
-      state.items = Object.entries(state.rates).map(([name, rate]) => ({
-        name,
-        probability: rate / 100,
-        value: parseInt(name.match(/\d+/)[0]) // Extract number from name
-      }));
-    }
-    
-    // Function to simulate a single chest open
-    function openChest() {
-      const roll = Math.random();
-      let cumulativeProbability = 0;
-      
-      for (const item of state.items) {
-        cumulativeProbability += item.probability;
-        if (roll < cumulativeProbability) {
-          return item;
-        }
-      }
-      
-      return state.items[state.items.length - 1]; // Fallback
-    }
-    
-    // Function to simulate a player opening n chests
-    function simulatePlayerJourney(numChests) {
-      const journey = [];
-      const itemCounts = state.items.reduce((acc, item) => {
-        acc[item.name] = 0;
-        return acc;
-      }, {});
-      
-      let totalValue = 0;
-      let cumulativeValue = 0;
-      
-      for (let i = 0; i < numChests; i++) {
-        const item = openChest();
-        itemCounts[item.name]++;
-        totalValue += item.value;
-        cumulativeValue = totalValue / (i + 1);
-        
-        const journeyPoint = {
-          chest: i + 1,
-          item: item.name,
-          itemValue: item.value,
-          runningAverage: cumulativeValue
+
+    function ratesToItems(){
+      state.items= Object.entries(state.rates).map(([name,val])=>{
+        return {
+          name,
+          probability: val/100,
+          value: parseInt(name.replace(/\D+/g,''))||0
         };
-        
-        // Add item counts
-        for (const itemName in itemCounts) {
-          journeyPoint[`count_${itemName}`] = itemCounts[itemName];
-        }
-        
-        journey.push(journeyPoint);
+      });
+    }
+
+    // 2) Simulation with full journey
+    function openChest(){
+      const roll=Math.random();
+      let cProb=0;
+      for(const it of state.items){
+        cProb+= it.probability;
+        if(roll< cProb) return it;
       }
-      
+      return state.items[state.items.length-1];
+    }
+    function simulatePlayerJourney(numChests){
+      const journey=[];
+      const itemCounts={};
+      state.items.forEach(it=> itemCounts[it.name]=0);
+      let totalVal=0;
+
+      for(let c=0; c<numChests; c++){
+        const it=openChest();
+        itemCounts[it.name]++;
+        totalVal+= it.value;
+        const runAvg= totalVal/(c+1);
+
+        const chestData={
+          chest:c+1,
+          item: it.name,
+          itemValue: it.value,
+          runningAverage: runAvg
+        };
+        for(const nm in itemCounts){
+          chestData[`count_${nm}`]= itemCounts[nm];
+        }
+        journey.push(chestData);
+      }
+      const finalAverage= journey[numChests-1].runningAverage;
       return {
         journey,
-        finalAverage: cumulativeValue,
+        finalAverage,
         itemCounts
       };
     }
-    
-    // Run the simulation
-    function runSimulation() {
-      const numChests = parseInt(elements.numChests.value) || 10;
-      const numSimulations = parseInt(elements.numSimulations.value) || 100;
-      
-      state.numChests = numChests;
-      state.numSimulations = numSimulations;
-      elements.chestsCount.textContent = numChests;
-      
+
+    function runSimulation(){
+      state.numChests= parseInt(els.numChests.value)||10;
+      state.numSimulations= parseInt(els.numSimulations.value)||100;
+      state.ossuaryPrice= parseFloat(els.ossuaryPrice.value)||240;
+      els.chestsCount.textContent= state.numChests;
+
       ratesToItems();
-      
-      const allSimulations = [];
-      const finalAverages = [];
-      
-      for (let i = 0; i < numSimulations; i++) {
-        const playerResult = simulatePlayerJourney(numChests);
-        allSimulations.push(playerResult);
-        finalAverages.push(playerResult.finalAverage);
+      const allSimulations=[];
+      const finalAverages=[];
+      for(let i=0;i< state.numSimulations;i++){
+        const sim= simulatePlayerJourney(state.numChests);
+        allSimulations.push(sim);
+        finalAverages.push(sim.finalAverage);
       }
-      
-      // Sort averages to find percentiles
-      finalAverages.sort((a, b) => a - b);
-      
-      // Calculate percentiles
-      const percentiles = {};
-      const percentilesList = [1, ...Array.from({length: 19}, (_, i) => (i + 1) * 5), 99];
-      
-      percentilesList.forEach(p => {
-        const index = Math.floor((p / 100) * finalAverages.length);
-        percentiles[p] = finalAverages[Math.min(index, finalAverages.length - 1)];
-      });
-      
-      // Find the simulations closest to each percentile
-      const percentileJourneys = {};
-      Object.entries(percentiles).forEach(([percentile, value]) => {
-        const closestSimulation = allSimulations.reduce((closest, current) => {
-          return Math.abs(current.finalAverage - value) < Math.abs(closest.finalAverage - value) ? current : closest;
-        });
-        percentileJourneys[percentile] = closestSimulation.journey;
-      });
-      
-      // Average journey across all simulations
-      const averageJourney = [];
-      for (let chest = 0; chest < numChests; chest++) {
-        const chestData = { chest: chest + 1 };
-        
-        // Calculate average running average at this chest across all simulations
-        chestData.runningAverage = allSimulations.reduce((sum, sim) => sum + sim.journey[chest].runningAverage, 0) / allSimulations.length;
-        
-        // Calculate average counts for each item at this chest
-        state.items.forEach(item => {
-          chestData[`avg_count_${item.name}`] = allSimulations.reduce((sum, sim) => sum + sim.journey[chest][`count_${item.name}`], 0) / allSimulations.length;
-        });
-        
-        averageJourney.push(chestData);
+      finalAverages.sort((a,b)=>a-b);
+
+      // compute percentile journeys
+      const pvals={5:null,50:null,95:null};
+      for(const p of [5,50,95]){
+        let idx=Math.floor((p/100)*finalAverages.length);
+        if(idx>=finalAverages.length) idx=finalAverages.length-1;
+        pvals[p]= finalAverages[idx];
       }
-      
-      state.simulationResults = {
+      const percentileJourneys={};
+      [5,50,95].forEach(p=>{
+        const target= pvals[p];
+        let best= allSimulations[0];
+        let bestDiff= Math.abs(best.finalAverage-target);
+        for(const sim of allSimulations){
+          const diff= Math.abs(sim.finalAverage- target);
+          if(diff< bestDiff){
+            best= sim;
+            bestDiff= diff;
+          }
+        }
+        percentileJourneys[p]= best.journey;
+      });
+
+      // average journey
+      const averageJourney=[];
+      for(let c=0;c< state.numChests;c++){
+        let sumRunning=0;
+        for(const sim of allSimulations){
+          sumRunning+= sim.journey[c].runningAverage;
+        }
+        const avg= sumRunning/allSimulations.length;
+        averageJourney.push({
+          chest:c+1,
+          runningAverage: avg
+        });
+      }
+
+      state.simulationResults={
         allSimulations,
-        averageJourney,
-        percentiles,
+        finalAverages,
         percentileJourneys,
-        finalAverages
+        averageJourney
       };
-      
       updateDisplay();
     }
-    
-    // Update the display with simulation results
-    function updateDisplay() {
-      if (!state.simulationResults) return;
-      
+
+    // 3) Display updates
+    function updateDisplay(){
       updateDropRatesTable();
       updateDistributionChart();
       updateJourneyChart();
-      updatePercentileInfo();
+      updatePercentileBoxes();
+      updateRatioCostTable();
     }
-    
-    // Update drop rates table
-    function updateDropRatesTable() {
-      const tableBody = elements.dropRatesTable.querySelector('tbody');
-      tableBody.innerHTML = '';
-      
-      const totalChests = state.numChests * state.numSimulations;
-      
-      state.items.forEach(item => {
-        const totalCount = state.simulationResults.allSimulations.reduce(
-          (sum, sim) => sum + sim.itemCounts[item.name], 0
-        );
-        
-        const row = document.createElement('tr');
-        
-        const nameCell = document.createElement('td');
-        nameCell.textContent = item.name;
-        
-        const expectedCell = document.createElement('td');
-        expectedCell.textContent = (item.probability * 100).toFixed(2) + '%';
-        expectedCell.className = 'text-right';
-        
-        const actualCell = document.createElement('td');
-        actualCell.textContent = (totalCount / totalChests * 100).toFixed(2) + '%';
-        actualCell.className = 'text-right';
-        
-        const avgCountCell = document.createElement('td');
-        avgCountCell.textContent = (totalCount / state.numSimulations).toFixed(2);
-        avgCountCell.className = 'text-right';
-        
-        row.appendChild(nameCell);
-        row.appendChild(expectedCell);
-        row.appendChild(actualCell);
-        row.appendChild(avgCountCell);
-        
-        tableBody.appendChild(row);
-      });
-    }
-    
-    // Prepare distribution data
-    function prepareDistributionData() {
-      const bucketSize = 0.5;
-      const buckets = {};
-      
-      state.simulationResults.finalAverages.forEach(avg => {
-        const bucketKey = Math.floor(avg / bucketSize) * bucketSize;
-        buckets[bucketKey] = (buckets[bucketKey] || 0) + 1;
-      });
-      
-      return {
-        labels: Object.keys(buckets).map(bucket => `${parseFloat(bucket).toFixed(1)}-${(parseFloat(bucket) + bucketSize).toFixed(1)}`),
-        datasets: [{
-          label: 'Number of Players',
-          data: Object.values(buckets),
-          backgroundColor: '#5865f2',
-          borderColor: '#4752c4',
-          borderWidth: 1
-        }]
-      };
-    }
-    
-    // Update distribution chart
-    function updateDistributionChart() {
-      if (state.charts.distribution) {
-        state.charts.distribution.destroy();
+
+    // (A) Drop Rates Table
+    function updateDropRatesTable(){
+      els.dropRatesTable.innerHTML='';
+      const allSim= state.simulationResults.allSimulations;
+      const totalChests= state.numChests* state.numSimulations;
+
+      // sum item counts
+      const sums={};
+      state.items.forEach(it=> sums[it.name]=0);
+      for(const sim of allSim){
+        for(const nm in sim.itemCounts){
+          sums[nm]+= sim.itemCounts[nm];
+        }
       }
-      
-      const ctx = elements.distributionChart.getContext('2d');
-      
-      state.charts.distribution = new Chart(ctx, {
-        type: 'bar',
-        data: prepareDistributionData(),
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: {
-              labels: {
-                color: '#b9bbbe'
+
+      // build table rows
+      for(const it of state.items){
+        const row=document.createElement('tr');
+        const tdName=document.createElement('td'); tdName.textContent= it.name;
+        const tdExp=document.createElement('td'); tdExp.className='text-right';
+        tdExp.textContent= (it.probability*100).toFixed(2)+'%';
+        const actual= (sums[it.name]/totalChests)*100;
+        const tdAct=document.createElement('td'); tdAct.className='text-right';
+        tdAct.textContent= actual.toFixed(2)+'%';
+        const tdAvg=document.createElement('td'); tdAvg.className='text-right';
+        tdAvg.textContent= (sums[it.name]/ state.numSimulations).toFixed(2);
+
+        row.append(tdName, tdExp, tdAct, tdAvg);
+        els.dropRatesTable.appendChild(row);
+      }
+    }
+
+    // (B) Distribution of final averages
+    function buildDistData(){
+      const bucketSize=0.5;
+      const buckets={};
+      for(const val of state.simulationResults.finalAverages){
+        const bk=Math.floor(val/bucketSize)*bucketSize;
+        buckets[bk]=(buckets[bk]||0)+1;
+      }
+      const labels= Object.keys(buckets).map(k=>{
+        const low= parseFloat(k).toFixed(1);
+        const high=(parseFloat(k)+bucketSize).toFixed(1);
+        return `${low}-${high}`;
+      });
+      const data= Object.values(buckets);
+      return {labels,data};
+    }
+    function updateDistributionChart(){
+      if(state.charts.distribution) state.charts.distribution.destroy();
+      const {labels,data}= buildDistData();
+      const ctx= els.distributionChart.getContext('2d');
+      state.charts.distribution= new Chart(ctx,{
+        type:'bar',
+        data:{
+          labels,
+          datasets:[{
+            label:'Number of Players',
+            data,
+            backgroundColor:'#5865f2'
+          }]
+        },
+        options:{
+          responsive:true,
+          maintainAspectRatio:false,
+          scales:{
+            x:{
+              grid:{color:'#555'},
+              ticks:{color:'#b9bbbe'},
+              title:{
+                display:true,
+                text:'Average Talisman %',
+                color:'#b9bbbe'
               }
             },
-            tooltip: {
-              backgroundColor: '#36393f',
-              titleColor: '#dcddde',
-              bodyColor: '#dcddde',
-              borderColor: '#72767d',
-              borderWidth: 1
-            }
-          },
-          scales: {
-            x: {
-              grid: {
-                color: '#555555'
-              },
-              ticks: {
-                color: '#b9bbbe'
-              },
-              title: {
-                display: true,
-                text: 'Average Talisman %',
-                color: '#b9bbbe'
-              }
-            },
-            y: {
-              grid: {
-                color: '#555555'
-              },
-              ticks: {
-                color: '#b9bbbe'
-              },
-              title: {
-                display: true,
-                text: 'Number of Players',
-                color: '#b9bbbe'
+            y:{
+              grid:{color:'#555'},
+              ticks:{color:'#b9bbbe'},
+              title:{
+                display:true,
+                text:'Number of Players',
+                color:'#b9bbbe'
               }
             }
           }
         }
       });
     }
-    
-    // Update journey chart
-    function updateJourneyChart() {
-      if (state.charts.journey) {
-        state.charts.journey.destroy();
-      }
-      
-      const ctx = elements.journeyChart.getContext('2d');
-      
-      // Prepare data for the chart
-      const datasets = [];
-      
-      // Add mean line
-      datasets.push({
-        label: 'Mean (All Players)',
-        data: state.simulationResults.averageJourney.map(point => ({
-          x: point.chest,
-          y: point.runningAverage
-        })),
-        borderColor: '#dcddde',
-        backgroundColor: '#dcddde',
-        borderWidth: 2,
-        tension: 0.1,
-        pointRadius: 0
+
+    // (C) Journey chart with dynamic Y range
+    function updateJourneyChart(){
+      if(state.charts.journey) state.charts.journey.destroy();
+      const ctx= els.journeyChart.getContext('2d');
+
+      // build data sets
+      const dataSets=[];
+      // mean line
+      const meanData= state.simulationResults.averageJourney.map(pt=>({x:pt.chest,y:pt.runningAverage}));
+      dataSets.push({
+        label:'Mean (All Players)',
+        data: meanData,
+        borderColor:'#dcddde',
+        backgroundColor:'#dcddde',
+        borderWidth:2,
+        tension:0.1,
+        pointRadius:0
       });
-      
-      // Add percentile lines if enabled
-      if (state.showPercentiles) {
-        const percentileColors = {
-          5: '#ed4245',  // Red
-          50: '#faa61a', // Yellow
-          95: '#3ba55c'  // Green
-        };
-        
-        [5, 50, 95].forEach(percentile => {
-          const percentileData = state.simulationResults.percentileJourneys[percentile];
-          
-          let label = `${percentile}th Percentile`;
-          if (percentile === 5) label += ' (Unlucky)';
-          if (percentile === 50) label += ' (Average)';
-          if (percentile === 95) label += ' (Lucky)';
-          
-          datasets.push({
+
+      if(state.showPercentiles){
+        const colors={5:'#ed4245',50:'#faa61a',95:'#3ba55c'};
+        [5,50,95].forEach(p=>{
+          const journey= state.simulationResults.percentileJourneys[p];
+          if(!journey) return;
+          let label= `${p}th Percentile`;
+          if(p===5) label+=' (Unlucky)';
+          if(p===50) label+=' (Average)';
+          if(p===95) label+=' (Lucky)';
+          const lineData= journey.map(ch=>({x:ch.chest,y: ch.runningAverage}));
+          dataSets.push({
             label,
-            data: percentileData.map(point => ({
-              x: point.chest,
-              y: point.runningAverage
-            })),
-            borderColor: percentileColors[percentile],
-            backgroundColor: percentileColors[percentile],
-            borderWidth: 2,
-            tension: 0.1,
-            pointRadius: 0
+            data: lineData,
+            borderColor: colors[p],
+            backgroundColor: colors[p],
+            borderWidth:2,
+            tension:0.1,
+            pointRadius:0
           });
         });
       }
-      
-      state.charts.journey = new Chart(ctx, {
-        type: 'line',
-        data: {
-          datasets
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: {
-              labels: {
-                color: '#b9bbbe'
-              }
-            },
-            tooltip: {
-              backgroundColor: '#36393f',
-              titleColor: '#dcddde',
-              bodyColor: '#dcddde',
-              borderColor: '#72767d',
-              borderWidth: 1,
-              callbacks: {
-                label: function(context) {
-                  return `${context.dataset.label}: ${context.parsed.y.toFixed(2)}%`;
-                }
-              }
-            }
-          },
-          scales: {
-            x: {
-              type: 'linear',
-              min: 1,
+
+      // figure out min/max Y
+      let allY=[];
+      for(const ds of dataSets){
+        for(const pt of ds.data){
+          allY.push(pt.y);
+        }
+      }
+      if(allY.length<1) allY=[0,100];
+      const minY= Math.min(...allY);
+      const maxY= Math.max(...allY);
+      const padding= (maxY-minY)*0.1 || 1;
+      const chartMinY= minY - padding< 0? 0: minY - padding;
+      const chartMaxY= maxY + padding;
+
+      state.charts.journey= new Chart(ctx,{
+        type:'line',
+        data:{ datasets: dataSets },
+        options:{
+          responsive:true,
+          maintainAspectRatio:false,
+          scales:{
+            x:{
+              type:'linear',
+              min:1,
               max: state.numChests,
-              grid: {
-                color: '#555555'
-              },
-              ticks: {
-                color: '#b9bbbe',
-                stepSize: Math.max(1, Math.floor(state.numChests / 10))
-              },
-              title: {
-                display: true,
-                text: 'Number of Chests Opened',
-                color: '#b9bbbe'
+              ticks:{color:'#b9bbbe'},
+              grid:{color:'#555'},
+              title:{
+                display:true,
+                text:'Number of Chests Opened',
+                color:'#b9bbbe'
               }
             },
-            y: {
-              min: 20,
-              max: 35,
-              grid: {
-                color: '#555555'
-              },
-              ticks: {
-                color: '#b9bbbe'
-              },
-              title: {
-                display: true,
-                text: 'Average Talisman %',
-                color: '#b9bbbe'
+            y:{
+              min: chartMinY,
+              max: chartMaxY,
+              ticks:{color:'#b9bbbe'},
+              grid:{color:'#555'},
+              title:{
+                display:true,
+                text:'Average Talisman %',
+                color:'#b9bbbe'
               }
             }
           }
         }
       });
     }
-    
-    // Update percentile information
-    function updatePercentileInfo() {
-      const expected50 = (state.numChests * state.rates["+50% Talisman"] / 100).toFixed(2);
-      
-      // Unlucky (5th percentile)
-      elements.unluckyAvg.textContent = state.simulationResults.percentiles[5].toFixed(2) + '%';
-      elements.unluckyExpected.textContent = expected50;
-      elements.unluckyActual.textContent = state.simulationResults.percentileJourneys[5][state.numChests-1]["count_+50% Talisman"];
-      
-      // Average (50th percentile)
-      elements.avgAvg.textContent = state.simulationResults.percentiles[50].toFixed(2) + '%';
-      elements.avgExpected.textContent = expected50;
-      elements.avgActual.textContent = state.simulationResults.percentileJourneys[50][state.numChests-1]["count_+50% Talisman"];
-      
-      // Lucky (95th percentile)
-      elements.luckyAvg.textContent = state.simulationResults.percentiles[95].toFixed(2) + '%';
-      elements.luckyExpected.textContent = expected50;
-      elements.luckyActual.textContent = state.simulationResults.percentileJourneys[95][state.numChests-1]["count_+50% Talisman"];
+
+    // (D) Percentile boxes (only final average)
+    function updatePercentileBoxes(){
+      const simRes= state.simulationResults;
+      if(!simRes) return;
+
+      const arr= simRes.finalAverages;
+      const idx5= Math.floor(0.05*(arr.length-1));
+      const idx50= Math.floor(0.50*(arr.length-1));
+      const idx95= Math.floor(0.95*(arr.length-1));
+
+      els.unluckyAvg.textContent= arr[idx5].toFixed(2)+'%';
+      els.avgAvg.textContent= arr[idx50].toFixed(2)+'%';
+      els.luckyAvg.textContent= arr[idx95].toFixed(2)+'%';
     }
-    
-    // Event Listeners
-    elements.runSimulation.addEventListener('click', runSimulation);
-    
-    elements.numChests.addEventListener('input', () => {
-      state.numChests = parseInt(elements.numChests.value) || 10;
-    });
-    
-    elements.numSimulations.addEventListener('input', () => {
-      state.numSimulations = parseInt(elements.numSimulations.value) || 100;
-    });
-    
-    elements.showPercentiles.addEventListener('change', () => {
-      state.showPercentiles = elements.showPercentiles.checked;
-      if (state.simulationResults) {
-        updateJourneyChart();
+
+    // (E) Ratio-based cost table
+    function updateRatioCostTable(){
+      const tb= els.ratioCostTable;
+      tb.innerHTML='';
+
+      // find baseline item
+      let baseline= state.items[0];
+      for(const it of state.items){
+        if(it.probability> baseline.probability){
+          baseline= it;
+        }
       }
-    });
-    
-    // Initialize the app
-    function init() {
+
+      // sum item counts
+      const allSim= state.simulationResults.allSimulations;
+      const itemCounts={};
+      state.items.forEach(it=> itemCounts[it.name]=0);
+      allSim.forEach(sim=>{
+        for(const nm in sim.itemCounts){
+          itemCounts[nm]+= sim.itemCounts[nm];
+        }
+      });
+      const baselineCount= itemCounts[baseline.name]||0;
+      const baselineProb= baseline.probability;
+
+      // show all Talisman items
+      const relevant= state.items.filter(it=> it.name.includes('Talisman'));
+      relevant.forEach(it=>{
+        const row=document.createElement('tr');
+        const tdName=document.createElement('td');
+        tdName.textContent= it.name;
+
+        // theoretical ratio
+        let ratioTheo= Infinity;
+        if(baselineProb>0 && it.probability>0){
+          ratioTheo= baselineProb/ it.probability;
+        }
+        const costTheo= isFinite(ratioTheo)
+          ? state.ossuaryPrice* ratioTheo
+          : Infinity;
+
+        const tdTheo=document.createElement('td');
+        tdTheo.className='text-right';
+        tdTheo.textContent= isFinite(costTheo)? costTheo.toFixed(2): '∞';
+
+        // empirical ratio
+        const cItem= itemCounts[it.name]||0;
+        let ratioEmp= Infinity;
+        if(baselineCount>0 && cItem>0){
+          ratioEmp= baselineCount/cItem;
+        }
+        const costEmp= isFinite(ratioEmp)
+          ? state.ossuaryPrice* ratioEmp
+          : Infinity;
+        const tdEmp=document.createElement('td');
+        tdEmp.className='text-right';
+        tdEmp.textContent= isFinite(costEmp)? costEmp.toFixed(2):'∞';
+
+        row.append(tdName, tdTheo, tdEmp);
+        tb.appendChild(row);
+      });
+    }
+
+    function attachEvents(){
+      els.runSimulation.addEventListener('click', runSimulation);
+      els.numChests.addEventListener('input',()=>state.numChests= parseInt(els.numChests.value)||10);
+      els.numSimulations.addEventListener('input',()=>state.numSimulations= parseInt(els.numSimulations.value)||100);
+      els.ossuaryPrice.addEventListener('input',()=>state.ossuaryPrice= parseFloat(els.ossuaryPrice.value)||240);
+      els.showPercentiles.addEventListener('change',()=>{
+        state.showPercentiles= els.showPercentiles.checked;
+        if(state.simulationResults) updateJourneyChart();
+      });
+    }
+
+    function init(){
       initDropRateInputs();
+      attachEvents();
       runSimulation();
     }
-    
-    // Start the app when DOM is loaded
     document.addEventListener('DOMContentLoaded', init);
   </script>
 </body>
