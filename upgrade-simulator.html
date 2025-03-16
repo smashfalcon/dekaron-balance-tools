@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Effective Cost Calculator</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Upgrade Simulator</title>
   <!-- CDN imports for Chart.js -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
   <style>
@@ -20,31 +20,31 @@
       --green: #3ba55c;
       --yellow: #faa61a;
     }
-    
+
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
     }
-    
+
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       background-color: var(--background);
       color: var(--text-primary);
       line-height: 1.6;
     }
-    
+
     .container {
       max-width: 1200px;
       margin: 0 auto;
       padding: 1rem;
     }
-    
+
     h1, h2, h3, h4 {
       margin-bottom: 1rem;
       color: var(--text-primary);
     }
-    
+
     .card {
       background-color: var(--background-secondary);
       border-radius: 8px;
@@ -52,22 +52,22 @@
       margin-bottom: 1.5rem;
       box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
     }
-    
+
     .grid {
       display: grid;
       gap: 1.5rem;
     }
-    
+
     .grid-2 {
       grid-template-columns: 1fr;
     }
-    
+
     @media (min-width: 768px) {
       .grid-2 {
         grid-template-columns: 1fr 1fr;
       }
     }
-    
+
     input[type="number"] {
       background-color: #4f545c;
       color: var(--text-primary);
@@ -77,7 +77,7 @@
       width: 100%;
       margin-bottom: 1rem;
     }
-    
+
     select {
       background-color: #4f545c;
       color: var(--text-primary);
@@ -87,7 +87,7 @@
       width: 100%;
       margin-bottom: 1rem;
     }
-    
+
     button {
       background-color: var(--blurple);
       color: white;
@@ -97,98 +97,119 @@
       cursor: pointer;
       transition: background-color 0.2s;
     }
-    
+
     button:hover {
       background-color: #4752c4;
     }
-    
+
     button:disabled {
       background-color: var(--text-muted);
       cursor: not-allowed;
     }
-    
+
     label {
       display: block;
       margin-bottom: 0.5rem;
       color: var(--text-secondary);
     }
-    
+
     .form-group {
       margin-bottom: 1rem;
     }
-    
+
     .error {
       color: var(--red);
       margin-bottom: 0.5rem;
       font-size: 0.9rem;
     }
-    
+
     table {
       width: 100%;
       border-collapse: collapse;
     }
-    
+
     th, td {
       padding: 0.5rem;
       text-align: left;
       border: 1px solid #555;
     }
-    
+
     th {
       background-color: var(--background-tertiary);
     }
-    
+
     tr:nth-child(even) {
       background-color: rgba(255, 255, 255, 0.05);
     }
-    
+
     .chart-container {
       position: relative;
       height: 350px;
       width: 100%;
     }
-    
+
     .text-right {
       text-align: right;
     }
-    
+
     .text-center {
       text-align: center;
     }
-    
+
     .text-muted {
       color: var(--text-secondary);
     }
-    
+
     .mb-1 {
       margin-bottom: 0.5rem;
     }
-    
+
     .mb-2 {
       margin-bottom: 1rem;
     }
-    
+
     .mb-3 {
       margin-bottom: 1.5rem;
     }
-    
-    .note {
-      background-color: var(--background-tertiary);
+
+    /* Percentile cards styling */
+    .grid-3 {
+      grid-template-columns: 1fr;
+    }
+    @media (min-width: 768px) {
+      .grid-3 {
+        grid-template-columns: 1fr 1fr 1fr;
+      }
+    }
+    .percentile-card {
       padding: 1rem;
       border-radius: 4px;
-      color: var(--text-secondary);
-      font-size: 0.9rem;
+      border-width: 2px;
+      border-style: solid;
+      margin-bottom: 1rem;
+    }
+    .percentile-card.lucky {
+      background-color: rgba(59, 165, 92, 0.1);
+      border-color: var(--green);
+    }
+    .percentile-card.average {
+      background-color: rgba(250, 166, 26, 0.1);
+      border-color: var(--yellow);
+    }
+    .percentile-card.unlucky {
+      background-color: rgba(237, 66, 69, 0.1);
+      border-color: var(--red);
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>Effective Cost Calculator</h1>
-    
+    <h1>Upgrade Simulator</h1>
+
     <!-- Configuration Card -->
     <div class="card mb-3">
       <h2>Upgrade Configuration</h2>
-      
+
       <div class="table-container mb-3">
         <table id="configurationTable">
           <thead>
@@ -205,12 +226,12 @@
           </tbody>
         </table>
       </div>
-      
+
       <div class="grid grid-2">
         <div class="form-group">
           <label for="startingPoint">Starting Point</label>
           <select id="startingPoint">
-            <option value="0">+0</option>
+            <option value="0" selected>+0</option>
             <option value="1">+1</option>
             <option value="2">+2</option>
             <option value="3">+3</option>
@@ -221,7 +242,7 @@
             <option value="8">+8</option>
           </select>
         </div>
-        
+
         <div class="form-group">
           <label for="targetPlus">Target Plus Level</label>
           <select id="targetPlus">
@@ -238,26 +259,33 @@
           <div id="targetError" class="error"></div>
         </div>
       </div>
-      
+
+      <!-- Swap the order: Confidence first, then Number of Sim Players -->
       <div class="form-group">
         <label for="confidenceLevel">Confidence Level (%)</label>
-        <input type="number" id="confidenceLevel" min="1" max="99.99" step="0.01" value="95">
+        <input type="number" id="confidenceLevel" min="1" max="99.99" step="0.01" value="95" />
       </div>
-      
-      <button id="calculateButton">Calculate</button>
+
+      <div class="form-group">
+        <label for="numSimulatedPlayers">Number of Simulated Players</label>
+        <input type="number" id="numSimulatedPlayers" min="1" max="100000" value="1000" />
+      </div>
+
+      <!-- Button renamed to "Run Simulation" -->
+      <button id="runSimulationButton">Run Simulation</button>
     </div>
-    
-    <!-- Results Card -->
+
+    <!-- Theoretical Results Card -->
     <div class="card mb-3">
-      <h2>Results</h2>
+      <h2>Theoretical Results</h2>
       <div id="resultsContainer" class="mb-3">
-        <p>Click "Calculate" to see the average number of attempts required.</p>
+        <!-- Results will display here -->
       </div>
     </div>
-    
-    <!-- Probability Chart Card -->
+
+    <!-- Theoretical Probability Chart Card -->
     <div class="card mb-3">
-      <h2>Probability Distribution</h2>
+      <h2>Theoretical Probability Distribution</h2>
       <div class="chart-container">
         <canvas id="probabilityChart"></canvas>
       </div>
@@ -265,15 +293,77 @@
         <!-- Confidence level info will be displayed here -->
       </div>
     </div>
-    
-    <div class="note mb-3">
-      <p><strong>Note:</strong> This calculator estimates the average attempts required to achieve your target plus level from your selected starting point. The chart shows the probability distribution and the number of attempts needed to reach your specified confidence level.</p>
+
+    <!-- Simulation Results: Distribution of Attempts -->
+    <div class="card mb-3">
+      <h2>Simulation Results: Distribution of Final Attempts</h2>
+      <div class="chart-container">
+        <canvas id="attemptsDistributionChart"></canvas>
+      </div>
+      <div class="text-center text-muted mt-2">
+        Number of Attempts to Reach Target (in up to 20 ranges)
+      </div>
+    </div>
+
+    <!-- Player Experience Insights -->
+    <div class="card mb-3">
+      <h2>Player Experience Insights</h2>
+      <div class="grid grid-3" id="experienceInsights">
+        <!-- Lucky (5th percentile) -->
+        <div class="percentile-card lucky">
+          <h4>Lucky Players (5th Percentile)</h4>
+          <p class="text-muted">
+            Attempts: <strong id="luckyAttempts">0</strong>
+          </p>
+          <p class="text-muted">
+            Empirical Success Rate: <strong id="luckySuccessRate">0%</strong>
+          </p>
+        </div>
+        <!-- Average (50th percentile) -->
+        <div class="percentile-card average">
+          <h4>Average Players (50th Percentile)</h4>
+          <p class="text-muted">
+            Attempts: <strong id="avgAttempts">0</strong>
+          </p>
+          <p class="text-muted">
+            Empirical Success Rate: <strong id="avgSuccessRate">0%</strong>
+          </p>
+        </div>
+        <!-- Unlucky (95th Percentile) -->
+        <div class="percentile-card unlucky">
+          <h4>Unlucky Players (95th Percentile)</h4>
+          <p class="text-muted">
+            Attempts: <strong id="unluckyAttempts">0</strong>
+          </p>
+          <p class="text-muted">
+            Empirical Success Rate: <strong id="unluckySuccessRate">0%</strong>
+          </p>
+        </div>
+      </div>
     </div>
   </div>
 
   <script>
-    // Initialize calculator state
+    // =============== STATE ===============
     const state = {
+      // Default Talisman usage:
+      // +1..+4 => None (index 0)
+      // +5..+6 => +18% (index 1)
+      // +7 => +20% (index 2)
+      // +8 => +25% (index 3)
+      // +9 => +30% (index 4)
+      talismanStrategy: {
+        1: 0,
+        2: 0,
+        3: 0,
+        4: 0,
+        5: 1,
+        6: 1,
+        7: 2,
+        8: 3,
+        9: 4
+      },
+
       baseRates: {
         1: 0.95,
         2: 0.90,
@@ -293,272 +383,291 @@
         { name: "+30% Talisman", rate: 0.30 },
         { name: "+50% Talisman", rate: 0.50 }
       ],
-      talismanStrategy: {
-        1: 0, // Index of talismanOptions for each plus level
-        2: 0,
-        3: 0,
-        4: 0,
-        5: 0,
-        6: 0,
-        7: 0,
-        8: 0,
-        9: 0
-      },
+
+      // User inputs (defaults):
       startingPoint: 0,
       targetPlus: 9,
       confidenceLevel: 95,
-      compoundRates: {}, // Calculated compound success rates
+      numSimulatedPlayers: 1000,
+
+      // Computed compound rates (for theoretical, no-degrade)
+      compoundRates: {},
+
+      // Charts
       charts: {
-        probability: null
-      }
+        probability: null,
+        attemptsDistribution: null
+      },
+
+      // Simulation results
+      simulationAttempts: []
     };
-    
-    // DOM References
+
+    // =============== DOM REFS ===============
     const elements = {
-      configurationTable: document.getElementById('configurationTable'),
-      startingPoint: document.getElementById('startingPoint'),
-      targetPlus: document.getElementById('targetPlus'),
-      confidenceLevel: document.getElementById('confidenceLevel'),
-      targetError: document.getElementById('targetError'),
-      calculateButton: document.getElementById('calculateButton'),
-      resultsContainer: document.getElementById('resultsContainer'),
-      probabilityChart: document.getElementById('probabilityChart'),
-      confidenceInfo: document.getElementById('confidenceInfo')
+      configurationTable: document.getElementById("configurationTable"),
+      startingPoint: document.getElementById("startingPoint"),
+      targetPlus: document.getElementById("targetPlus"),
+      confidenceLevel: document.getElementById("confidenceLevel"),
+      targetError: document.getElementById("targetError"),
+      numSimulatedPlayers: document.getElementById("numSimulatedPlayers"),
+      runSimulationButton: document.getElementById("runSimulationButton"),
+
+      resultsContainer: document.getElementById("resultsContainer"),
+      probabilityChart: document.getElementById("probabilityChart"),
+      confidenceInfo: document.getElementById("confidenceInfo"),
+
+      attemptsDistributionChart: document.getElementById("attemptsDistributionChart"),
+
+      // Percentile Info
+      luckyAttempts: document.getElementById("luckyAttempts"),
+      luckySuccessRate: document.getElementById("luckySuccessRate"),
+      avgAttempts: document.getElementById("avgAttempts"),
+      avgSuccessRate: document.getElementById("avgSuccessRate"),
+      unluckyAttempts: document.getElementById("unluckyAttempts"),
+      unluckySuccessRate: document.getElementById("unluckySuccessRate")
     };
-    
-    // Initialize Configuration Table
+
+    // =============== INITIALIZATION ===============
+    function initApp() {
+      try {
+        initConfigurationTable();
+        attachEventListeners();
+        validateSelections();
+
+        // Immediately do an initial run (with default values)
+        runAllCalculations();
+      } catch (err) {
+        console.error("Error during init:", err);
+      }
+    }
+
+    // =============== CONFIG TABLE ===============
     function initConfigurationTable() {
-      if (!elements.configurationTable) return;
-      
-      const tableBody = elements.configurationTable.querySelector('tbody');
-      tableBody.innerHTML = '';
-      
-      // Calculate compound success rates first
+      const tableBody = elements.configurationTable.querySelector("tbody");
+      tableBody.innerHTML = "";
+
       calculateCompoundRates();
-      
+
       for (let plus = 1; plus <= 9; plus++) {
-        const row = document.createElement('tr');
-        
+        const row = document.createElement("tr");
+
         // Plus column
-        const plusCell = document.createElement('td');
+        const plusCell = document.createElement("td");
         plusCell.textContent = `+${plus}`;
-        
-        // Base Success Rate column
-        const rateCell = document.createElement('td');
-        rateCell.textContent = `${(state.baseRates[plus] * 100).toFixed(0)}%`;
-        rateCell.className = 'text-right';
-        
+
+        // Base Rate column
+        const baseRateCell = document.createElement("td");
+        baseRateCell.className = "text-right";
+        baseRateCell.textContent = `${(state.baseRates[plus] * 100).toFixed(0)}%`;
+
         // Talisman column
-        const talismanCell = document.createElement('td');
-        const selectEl = document.createElement('select');
+        const talismanCell = document.createElement("td");
+        const selectEl = document.createElement("select");
         selectEl.id = `talisman-${plus}`;
-        
+
         state.talismanOptions.forEach((option, index) => {
-          const optionEl = document.createElement('option');
-          optionEl.value = index;
-          optionEl.textContent = option.name;
-          selectEl.appendChild(optionEl);
+          const opt = document.createElement("option");
+          opt.value = index;
+          opt.textContent = option.name;
+          selectEl.appendChild(opt);
         });
-        
+
         selectEl.value = state.talismanStrategy[plus];
-        selectEl.addEventListener('change', (e) => {
+        selectEl.addEventListener("change", (e) => {
           state.talismanStrategy[plus] = parseInt(e.target.value);
           updateConfigurationTable();
         });
-        
+
         talismanCell.appendChild(selectEl);
-        
+
         // Total Success Rate column
-        const totalRateCell = document.createElement('td');
-        totalRateCell.className = 'text-right';
+        const totalRateCell = document.createElement("td");
+        totalRateCell.className = "text-right";
         totalRateCell.id = `total-rate-${plus}`;
-        totalRateCell.textContent = calculateTotalSuccessRate(plus).toFixed(2) + '%';
-        
+        totalRateCell.textContent = calculateTotalSuccessRate(plus).toFixed(2) + "%";
+
         // Compound Success Rate column
-        const compoundRateCell = document.createElement('td');
-        compoundRateCell.className = 'text-right';
+        const compoundRateCell = document.createElement("td");
+        compoundRateCell.className = "text-right";
         compoundRateCell.id = `compound-rate-${plus}`;
-        compoundRateCell.textContent = (state.compoundRates[plus] * 100).toFixed(2) + '%';
-        
+        compoundRateCell.textContent = (state.compoundRates[plus] * 100).toFixed(2) + "%";
+
         row.appendChild(plusCell);
-        row.appendChild(rateCell);
+        row.appendChild(baseRateCell);
         row.appendChild(talismanCell);
         row.appendChild(totalRateCell);
         row.appendChild(compoundRateCell);
+
         tableBody.appendChild(row);
       }
     }
-    
-    // Calculate total success rate for a plus level
-    function calculateTotalSuccessRate(plus) {
-      const baseRate = state.baseRates[plus];
-      const talismanIndex = state.talismanStrategy[plus];
-      const talismanBoost = state.talismanOptions[talismanIndex].rate;
-      
-      // Cap the rate at 100%
-      return Math.min(100, (baseRate + talismanBoost) * 100);
+
+    function updateConfigurationTable() {
+      calculateCompoundRates();
+      for (let plus = 1; plus <= 9; plus++) {
+        const totalRateCell = document.getElementById(`total-rate-${plus}`);
+        if (totalRateCell) {
+          totalRateCell.textContent = calculateTotalSuccessRate(plus).toFixed(2) + "%";
+        }
+        const compoundRateCell = document.getElementById(`compound-rate-${plus}`);
+        if (compoundRateCell) {
+          compoundRateCell.textContent = (state.compoundRates[plus] * 100).toFixed(2) + "%";
+        }
+      }
     }
-    
-    // Calculate compound success rates
+
+    // =============== EVENTS & VALIDATION ===============
+    function attachEventListeners() {
+      elements.startingPoint.addEventListener("change", () => {
+        state.startingPoint = parseInt(elements.startingPoint.value);
+        validateSelections();
+      });
+
+      elements.targetPlus.addEventListener("change", () => {
+        state.targetPlus = parseInt(elements.targetPlus.value);
+        validateSelections();
+      });
+
+      elements.confidenceLevel.addEventListener("input", () => {
+        state.confidenceLevel = parseFloat(elements.confidenceLevel.value);
+      });
+
+      elements.numSimulatedPlayers.addEventListener("input", () => {
+        state.numSimulatedPlayers = parseInt(elements.numSimulatedPlayers.value);
+      });
+
+      elements.runSimulationButton.addEventListener("click", () => {
+        runAllCalculations();
+      });
+    }
+
+    function validateSelections() {
+      const sp = parseInt(elements.startingPoint.value);
+      const tp = parseInt(elements.targetPlus.value);
+      if (tp <= sp) {
+        elements.targetError.textContent =
+          "Target plus level must be higher than starting point.";
+        return false;
+      }
+      elements.targetError.textContent = "";
+      return true;
+    }
+
+    // =============== THEORETICAL CALCS (NO DEGRADE) ===============
     function calculateCompoundRates() {
-      let compoundRate = 1.0; // Start with 100%
-      
+      let compoundRate = 1.0;
       for (let plus = 1; plus <= 9; plus++) {
         const totalRate = calculateTotalSuccessRate(plus) / 100;
         compoundRate *= totalRate;
         state.compoundRates[plus] = compoundRate;
       }
     }
-    
-    // Update configuration table
-    function updateConfigurationTable() {
-      // Recalculate compound rates
-      calculateCompoundRates();
-      
-      // Update the display
-      for (let plus = 1; plus <= 9; plus++) {
-        const totalRateCell = document.getElementById(`total-rate-${plus}`);
-        if (totalRateCell) {
-          totalRateCell.textContent = calculateTotalSuccessRate(plus).toFixed(2) + '%';
-        }
-        
-        const compoundRateCell = document.getElementById(`compound-rate-${plus}`);
-        if (compoundRateCell) {
-          compoundRateCell.textContent = (state.compoundRates[plus] * 100).toFixed(2) + '%';
-        }
-      }
+
+    function calculateTotalSuccessRate(plus) {
+      const baseRate = state.baseRates[plus];
+      const talismanIndex = state.talismanStrategy[plus];
+      const talismanBoost = state.talismanOptions[talismanIndex].rate;
+      return Math.min(100, (baseRate + talismanBoost) * 100);
     }
-    
-    // Validate the starting point and target plus selections
-    function validateSelections() {
-      const startingPoint = parseInt(elements.startingPoint.value);
-      const targetPlus = parseInt(elements.targetPlus.value);
-      
-      if (targetPlus <= startingPoint) {
-        elements.targetError.textContent = "Target plus level must be higher than starting point";
-        return false;
-      }
-      
-      elements.targetError.textContent = "";
-      return true;
-    }
-    
-    // Calculate success probability from starting point to target
+
     function calculateSuccessProbability() {
-      const startingPoint = parseInt(state.startingPoint);
-      const targetPlus = parseInt(state.targetPlus);
-      
-      // Calculate compound success rate from starting point to target
-      let startProb = 1;
-      if (startingPoint > 0) {
-        startProb = state.compoundRates[startingPoint];
+      let startProb = 1.0;
+      if (state.startingPoint > 0) {
+        startProb = state.compoundRates[state.startingPoint];
       }
-      
-      const targetProb = state.compoundRates[targetPlus];
-      
-      // The probability of success from starting point to target
+      const targetProb = state.compoundRates[state.targetPlus];
       return targetProb / startProb;
     }
-    
-    // Calculate average attempts
+
     function calculateAverageAttempts() {
-      const successProb = calculateSuccessProbability();
-      // Average attempts is 1/probability
-      return 1 / successProb;
+      const p = calculateSuccessProbability();
+      return 1 / p;
     }
-    
-    // Calculate attempts needed for specified confidence level
-    function calculateConfidenceAttempts(confidenceLevel) {
-      const successProb = calculateSuccessProbability();
-      
-      // Convert percentage to decimal
-      const confidence = confidenceLevel / 100;
-      
-      // For geometric distribution, the cumulative probability function is:
-      // P(X <= n) = 1 - (1 - p)^n
-      // Solving for n: n = log(1 - confidence) / log(1 - p)
-      
-      // Special case for very small probabilities to avoid division by zero
-      if (successProb < 0.0000001) {
-        return Number.MAX_SAFE_INTEGER; // Effectively infinity
+
+    function calculateConfidenceAttempts(confLevel) {
+      const p = calculateSuccessProbability();
+      const c = confLevel / 100;
+      if (p < 1e-9) {
+        return Number.MAX_SAFE_INTEGER;
       }
-      
-      const denominator = Math.log(1 - successProb);
-      // Check for division by very small number
-      if (Math.abs(denominator) < 0.0000001) {
-        return Number.MAX_SAFE_INTEGER; // Effectively infinity
+      const denominator = Math.log(1 - p);
+      if (Math.abs(denominator) < 1e-9) {
+        return Number.MAX_SAFE_INTEGER;
       }
-      
-      const attempts = Math.log(1 - confidence) / denominator;
-      return Math.ceil(attempts); // Round up to the next whole number
+      return Math.ceil(Math.log(1 - c) / denominator);
     }
-    
-    // Generate probability distribution data
+
+    function updateTheoreticalDisplay() {
+      const avgAttempts = calculateAverageAttempts();
+      const confAttempts = calculateConfidenceAttempts(state.confidenceLevel);
+      const successProb = calculateSuccessProbability();
+
+      elements.resultsContainer.innerHTML = `
+        <p class="mb-2">
+          <strong>From +${state.startingPoint} to +${state.targetPlus} (no degrade theoretical):</strong>
+        </p>
+        <p class="mb-2">
+          Expected attempts (theoretical): <strong>${avgAttempts.toFixed(2)}</strong>
+        </p>
+        <p class="mb-2">
+          Success probability per attempt: <strong>${(successProb * 100).toFixed(2)}%</strong>
+        </p>
+        <p>
+          Attempts for ${state.confidenceLevel}% confidence: <strong>${confAttempts}</strong>
+        </p>
+      `;
+    }
+
     function generateProbabilityData() {
-      const successProb = calculateSuccessProbability();
-      const averageAttempts = 1 / successProb;
-      
-      // Generate data for 3x the average attempts (or 50, whichever is smaller)
-      const maxAttempts = Math.min(Math.ceil(averageAttempts * 3), 50);
-      
+      const p = calculateSuccessProbability();
+      const confAttempts = calculateConfidenceAttempts(state.confidenceLevel);
+
       const data = [];
-      let cumulativeProbability = 0;
-      
-      for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-        // Probability of success exactly on attempt i for geometric distribution
-        // P(X = i) = p * (1-p)^(i-1)
-        const probability = successProb * Math.pow(1 - successProb, attempt - 1);
-        
-        // Cumulative probability
-        cumulativeProbability += probability;
-        
+      let cumProb = 0;
+      for (let i = 1; i <= confAttempts; i++) {
+        const prob = p * Math.pow(1 - p, i - 1);
+        cumProb += prob;
         data.push({
-          attempt,
-          probability,
-          cumulativeProbability
+          attempt: i,
+          probability: prob,
+          cumulativeProbability: cumProb
         });
       }
-      
       return data;
     }
-    
-    // Update the probability chart
+
     function updateProbabilityChart() {
-      // Destroy existing chart if it exists
       if (state.charts.probability) {
         state.charts.probability.destroy();
       }
-      
       if (!elements.probabilityChart) return;
-      
-      const probabilityData = generateProbabilityData();
-      
-      // Prepare chart data
+
+      const data = generateProbabilityData();
       const chartData = {
-        labels: probabilityData.map(d => d.attempt),
+        labels: data.map(d => d.attempt),
         datasets: [
           {
-            label: 'Success Probability',
-            data: probabilityData.map(d => d.probability * 100), // Convert to percentage
-            backgroundColor: 'rgba(88, 101, 242, 0.5)',
-            borderColor: 'rgba(88, 101, 242, 1)',
+            label: "Success Probability",
+            data: data.map(d => d.probability * 100),
+            backgroundColor: "rgba(88, 101, 242, 0.5)",
+            borderColor: "rgba(88, 101, 242, 1)",
             borderWidth: 1
           },
           {
-            label: 'Cumulative Probability',
-            data: probabilityData.map(d => d.cumulativeProbability * 100), // Convert to percentage
-            backgroundColor: 'rgba(59, 165, 92, 0.5)',
-            borderColor: 'rgba(59, 165, 92, 1)',
+            label: "Cumulative Probability",
+            data: data.map(d => d.cumulativeProbability * 100),
+            backgroundColor: "rgba(59, 165, 92, 0.5)",
+            borderColor: "rgba(59, 165, 92, 1)",
             borderWidth: 1,
-            type: 'line'
+            type: "line"
           }
         ]
       };
-      
-      // Create chart
-      const ctx = elements.probabilityChart.getContext('2d');
+
+      const ctx = elements.probabilityChart.getContext("2d");
       state.charts.probability = new Chart(ctx, {
-        type: 'bar',
+        type: "bar",
         data: chartData,
         options: {
           responsive: true,
@@ -567,40 +676,40 @@
             x: {
               title: {
                 display: true,
-                text: 'Number of Attempts',
-                color: '#dcddde'
+                text: "Number of Attempts",
+                color: "#dcddde"
               },
               ticks: {
-                color: '#b9bbbe'
+                color: "#b9bbbe"
               },
               grid: {
-                color: 'rgba(255, 255, 255, 0.1)'
+                color: "rgba(255, 255, 255, 0.1)"
               }
             },
             y: {
               title: {
                 display: true,
-                text: 'Probability (%)',
-                color: '#dcddde'
+                text: "Probability (%)",
+                color: "#dcddde"
               },
               ticks: {
-                color: '#b9bbbe'
+                color: "#b9bbbe"
               },
               grid: {
-                color: 'rgba(255, 255, 255, 0.1)'
+                color: "rgba(255, 255, 255, 0.1)"
               }
             }
           },
           plugins: {
             legend: {
               labels: {
-                color: '#dcddde'
+                color: "#dcddde"
               }
             },
             tooltip: {
               callbacks: {
-                label: function(context) {
-                  const label = context.dataset.label || '';
+                label: (context) => {
+                  const label = context.dataset.label || "";
                   const value = context.raw.toFixed(2);
                   return `${label}: ${value}%`;
                 }
@@ -609,119 +718,213 @@
           }
         }
       });
-      
-      // Update confidence info
-      const confidenceAttempts = calculateConfidenceAttempts(state.confidenceLevel);
-      const confidenceInfo = elements.confidenceInfo;
-      
-      if (confidenceInfo) {
-        confidenceInfo.innerHTML = `
-          <div>
-            <strong>${state.confidenceLevel}% Confidence:</strong> 
-            You need <strong>${confidenceAttempts}</strong> attempts to have a 
-            ${state.confidenceLevel}% chance of reaching +${state.targetPlus} from +${state.startingPoint}
-          </div>
-        `;
+
+      const confAttempts = calculateConfidenceAttempts(state.confidenceLevel);
+      elements.confidenceInfo.innerHTML = `
+        <div>
+          <strong>${state.confidenceLevel}% Confidence (no degrade):</strong> 
+          You need <strong>${confAttempts}</strong> attempts to have a 
+          ${state.confidenceLevel}% chance of reaching +${state.targetPlus} from +${state.startingPoint}.
+        </div>
+      `;
+    }
+
+    // =============== SIMULATION (DEGRADE) ===============
+    function runSimulation() {
+      state.simulationAttempts = [];
+      for (let i = 0; i < state.numSimulatedPlayers; i++) {
+        let currentPlus = state.startingPoint;
+        let attempts = 0;
+        while (currentPlus < state.targetPlus) {
+          attempts++;
+          const successRate = calculateTotalSuccessRate(currentPlus + 1) / 100;
+          if (Math.random() < successRate) {
+            currentPlus++;
+          } else {
+            currentPlus = state.startingPoint;
+          }
+        }
+        state.simulationAttempts.push(attempts);
       }
     }
-    
-    // Main calculation function
-    function calculate() {
-      if (!validateSelections()) {
-        return;
+
+    // =============== SIMULATION DISPLAY ===============
+    function updateSimulationDisplay() {
+      updateAttemptsDistributionChart();
+      updatePercentileCards();
+    }
+
+    function buildAttemptsBins() {
+      const sorted = state.simulationAttempts.slice().sort((a, b) => a - b);
+      if (!sorted.length) {
+        return { labels: [], counts: [] };
       }
-      
-      // Update state with current values
+
+      const binCount = 20;
+      const minVal = sorted[0];
+      const maxVal = sorted[sorted.length - 1];
+      if (minVal === maxVal) {
+        return {
+          labels: [`${minVal}`],
+          counts: [sorted.length]
+        };
+      }
+      const range = maxVal - minVal + 1;
+      const binSize = Math.ceil(range / binCount);
+
+      const bins = [];
+      for (let i = 0; i < binCount; i++) {
+        const start = minVal + i * binSize;
+        const end = start + binSize - 1;
+        if (start > maxVal) break;
+        bins.push({ start, end, count: 0 });
+      }
+
+      sorted.forEach(val => {
+        const idx = Math.floor((val - minVal) / binSize);
+        const clamped = Math.min(idx, bins.length - 1);
+        bins[clamped].count++;
+      });
+
+      const labels = [];
+      const counts = [];
+      bins.forEach(b => {
+        if (b.count > 0 || b.start <= maxVal) {
+          let label = b.start === b.end ? `${b.start}` : `${b.start}-${b.end}`;
+          labels.push(label);
+          counts.push(b.count);
+        }
+      });
+      return { labels, counts };
+    }
+
+    function updateAttemptsDistributionChart() {
+      if (state.charts.attemptsDistribution) {
+        state.charts.attemptsDistribution.destroy();
+      }
+      if (!elements.attemptsDistributionChart) return;
+
+      const { labels, counts } = buildAttemptsBins();
+      const chartData = {
+        labels,
+        datasets: [
+          {
+            label: "Number of Players",
+            data: counts,
+            backgroundColor: "#5865f2",
+            borderColor: "#4752c4",
+            borderWidth: 1
+          }
+        ]
+      };
+
+      const ctx = elements.attemptsDistributionChart.getContext("2d");
+      state.charts.attemptsDistribution = new Chart(ctx, {
+        type: "bar",
+        data: chartData,
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            x: {
+              title: {
+                display: true,
+                text: "Total Attempts (Binned)",
+                color: "#dcddde"
+              },
+              ticks: {
+                color: "#b9bbbe"
+              },
+              grid: {
+                color: "rgba(255, 255, 255, 0.1)"
+              }
+            },
+            y: {
+              title: {
+                display: true,
+                text: "Number of Players",
+                color: "#dcddde"
+              },
+              ticks: {
+                color: "#b9bbbe"
+              },
+              grid: {
+                color: "rgba(255, 255, 255, 0.1)"
+              }
+            }
+          },
+          plugins: {
+            legend: {
+              labels: {
+                color: "#dcddde"
+              }
+            },
+            tooltip: {
+              callbacks: {
+                label: function (context) {
+                  return `${context.label}: ${context.parsed.y} players`;
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+
+    function updatePercentileCards() {
+      const sorted = state.simulationAttempts.slice().sort((a, b) => a - b);
+      if (!sorted.length) return;
+
+      const percentiles = [5, 50, 95];
+      const results = {};
+      percentiles.forEach(pct => {
+        let idx = Math.floor((pct / 100) * sorted.length);
+        if (idx >= sorted.length) idx = sorted.length - 1;
+        if (idx < 0) idx = 0;
+        const attempts = sorted[idx];
+
+        const levelsGained = state.targetPlus - state.startingPoint;
+        const successRate = attempts > 0 ? (levelsGained / attempts) : 1.0;
+
+        results[pct] = { attempts, successRate };
+      });
+
+      elements.luckyAttempts.textContent = results[5].attempts;
+      elements.luckySuccessRate.textContent =
+        (results[5].successRate * 100).toFixed(2) + "%";
+
+      elements.avgAttempts.textContent = results[50].attempts;
+      elements.avgSuccessRate.textContent =
+        (results[50].successRate * 100).toFixed(2) + "%";
+
+      elements.unluckyAttempts.textContent = results[95].attempts;
+      elements.unluckySuccessRate.textContent =
+        (results[95].successRate * 100).toFixed(2) + "%";
+    }
+
+    // =============== MASTER FUNCTION ===============
+    function runAllCalculations() {
+      if (!validateSelections()) return;
+
+      // Update state from DOM
       state.startingPoint = parseInt(elements.startingPoint.value);
       state.targetPlus = parseInt(elements.targetPlus.value);
       state.confidenceLevel = parseFloat(elements.confidenceLevel.value);
-      
-      // Clamp confidence level to valid range
+      state.numSimulatedPlayers = parseInt(elements.numSimulatedPlayers.value);
+
       if (state.confidenceLevel < 1) state.confidenceLevel = 1;
       if (state.confidenceLevel > 99.99) state.confidenceLevel = 99.99;
-      
-      // Calculate average attempts
-      const averageAttempts = calculateAverageAttempts();
-      const confidenceAttempts = calculateConfidenceAttempts(state.confidenceLevel);
-      
-      // Update results display
-      updateResults(averageAttempts, confidenceAttempts);
-      
-      // Update probability chart
+
+      // 1) Theoretical
+      updateTheoreticalDisplay();
       updateProbabilityChart();
+
+      // 2) Simulation
+      runSimulation();
+      updateSimulationDisplay();
     }
-    
-    // Update results display
-    function updateResults(attempts, confidenceAttempts) {
-      const resultsContainer = elements.resultsContainer;
-      if (!resultsContainer) return;
-      
-      // Calculate the success probability percentage
-      const successProb = calculateSuccessProbability();
-      
-      resultsContainer.innerHTML = `
-        <p class="mb-2">
-          <strong>From +${state.startingPoint} to +${state.targetPlus}:</strong>
-        </p>
-        <p class="mb-2">
-          Expected attempts: <strong>${attempts.toFixed(2)}</strong>
-        </p>
-        <p class="mb-2">
-          Success probability per attempt: <strong>${(successProb * 100).toFixed(2)}%</strong>
-        </p>
-        <p>
-          Attempts needed for ${state.confidenceLevel}% confidence: <strong>${confidenceAttempts}</strong>
-        </p>
-      `;
-    }
-    
-    // Event listeners
-    function attachEventListeners() {
-      if (elements.calculateButton) {
-        elements.calculateButton.addEventListener('click', calculate);
-      }
-      
-      if (elements.startingPoint) {
-        elements.startingPoint.addEventListener('change', function() {
-          state.startingPoint = parseInt(this.value);
-          validateSelections();
-        });
-      }
-      
-      if (elements.targetPlus) {
-        elements.targetPlus.addEventListener('change', function() {
-          state.targetPlus = parseInt(this.value);
-          validateSelections();
-        });
-      }
-      
-      if (elements.confidenceLevel) {
-        elements.confidenceLevel.addEventListener('input', function() {
-          state.confidenceLevel = parseFloat(this.value);
-        });
-      }
-    }
-    
-    // Initialize the app
-    function initApp() {
-      try {
-        console.log("Initializing application...");
-        
-        // Initialize tables and attach event listeners
-        initConfigurationTable();
-        attachEventListeners();
-        
-        // Initial validation
-        validateSelections();
-        
-        console.log("Initialization complete");
-      } catch (error) {
-        console.error("Error during initialization:", error);
-      }
-    }
-    
-    // Start the app when DOM is loaded
-    document.addEventListener('DOMContentLoaded', initApp);
+
+    document.addEventListener("DOMContentLoaded", initApp);
   </script>
 </body>
 </html>

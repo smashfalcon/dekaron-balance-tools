@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Balance Tools</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>Falcon's Dekaron Tools</title>
   <style>
     /* Discord-inspired dark theme */
     :root {
@@ -37,26 +37,50 @@
       color: var(--text-primary);
       line-height: 1.6;
       display: flex;
-      flex-direction: row;
+      flex-direction: column;
     }
     
-    /* Sidebar Styles */
-    .sidebar {
-      width: 250px;
-      background-color: var(--background-tertiary);
-      padding: 1.5rem 1rem;
-      flex-shrink: 0;
-      height: 100%;
-      overflow-y: auto;
-    }
-    
-    .sidebar-header {
-      margin-bottom: 1.5rem;
-    }
-    
-    .sidebar-header h1 {
+    /* Hamburger button in top-left corner */
+    .toggle-button {
+      position: absolute;
+      top: 0;
+      left: 0;
+      background: none;
+      border: none;
       font-size: 1.5rem;
       color: var(--text-primary);
+      padding: 0.75rem 1rem;
+      cursor: pointer;
+      outline: none;
+      z-index: 999; /* ensure it is on top of everything */
+    }
+    .toggle-button:hover {
+      background-color: var(--background-tertiary);
+    }
+
+    /* Container that holds the sidebar + main content */
+    .app-container {
+      flex: 1;
+      display: flex;
+      flex-direction: row;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .sidebar-container {
+      position: absolute;
+      transition: transform 0.3s ease;
+      background-color: var(--background-tertiary);
+      z-index: 998; /* behind the hamburger but in front of main content */
+      overflow-y: auto;
+    }
+
+    /* SIDEBAR CONTENTS */
+    .sidebar {
+      width: 100%;
+      height: 100%;
+      /* Add extra top padding so content starts below hamburger */
+      padding: 3rem 1rem 1rem 1rem;
     }
     
     .nav-section {
@@ -96,12 +120,13 @@
       background-color: var(--blurple);
       color: white;
     }
-    
-    /* Main Content Styles */
+
+    /* MAIN CONTENT (IFRAME) */
     .main-content {
       flex: 1;
       height: 100%;
       overflow: hidden;
+      position: relative;
     }
     
     #content-frame {
@@ -109,53 +134,101 @@
       height: 100%;
       border: none;
     }
-    
-    /* Media Query for Mobile */
+
+    /* ============ DESKTOP STYLES ============ */
+    @media (min-width: 769px) {
+      .sidebar-container {
+        top: 0;
+        left: 0;
+        width: 250px;
+        height: 100%;
+        transform: translateX(-250px);
+      }
+      .sidebar-container.open {
+        transform: translateX(0);
+      }
+    }
+
+    /* ============ MOBILE STYLES ============ */
     @media (max-width: 768px) {
-      body {
-        flex-direction: column;
-      }
-      
-      .sidebar {
+      .sidebar-container {
+        left: 0;
+        bottom: 0;
         width: 100%;
-        height: auto;
-        max-height: 200px;
+        height: 220px; /* adjust as desired */
+        transform: translateY(220px);
       }
-      
-      .main-content {
-        height: calc(100% - 200px);
+      .sidebar-container.open {
+        transform: translateY(0);
       }
     }
   </style>
 </head>
 <body>
-  <!-- Sidebar Navigation -->
-  <div class="sidebar">
-    <div class="sidebar-header">
-      <h1>Balance Tools</h1>
+  <!-- Hamburger at top-left corner -->
+  <button class="toggle-button" id="toggle-button">&#9776;</button>
+
+  <div class="app-container">
+    <!-- The collapsible sidebar container -->
+    <div class="sidebar-container" id="sidebarContainer">
+      <div class="sidebar">
+        <!-- We removed the "Balance Tools" title -->
+        <div class="nav-section">
+          <h2 class="nav-section-title">SIMULATORS</h2>
+          <ul class="nav-links">
+            <li>
+              <a id="ossuary-link" class="nav-link">
+                Ossuary Drop Simulator
+              </a>
+            </li>
+            <li>
+              <a id="upgrade-link" class="nav-link active">
+                Upgrade Simulator
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
     </div>
-    
-    <div class="nav-section">
-      <h2 class="nav-section-title">SIMULATORS</h2>
-      <ul class="nav-links">
-        <li><a id="ossuary-link" class="nav-link active">Ossuary Drop Simulator</a></li>
-      </ul>
+
+    <!-- Main Content with default upgrade-simulator in iframe -->
+    <div class="main-content">
+      <!-- Default page: upgrade-simulator.html -->
+      <iframe id="content-frame" src="upgrade-simulator.html" frameborder="0" allowfullscreen></iframe>
     </div>
-  </div>
-  
-  <!-- Main Content (iframe for embedding) -->
-  <div class="main-content">
-    <iframe id="content-frame" src="ossuary-simulator.html" frameborder="0" allowfullscreen></iframe>
   </div>
 
   <script>
-    document.getElementById('ossuary-link').addEventListener('click', function() {
-      document.getElementById('content-frame').src = 'ossuary-simulator.html';
-      
-      // Update active state
-      const navLinks = document.querySelectorAll('.nav-link');
+    // Grab references
+    const toggleButton = document.getElementById('toggle-button');
+    const sidebarContainer = document.getElementById('sidebarContainer');
+    const ossuaryLink = document.getElementById('ossuary-link');
+    const upgradeLink = document.getElementById('upgrade-link');
+    const contentFrame = document.getElementById('content-frame');
+    const navLinks = document.querySelectorAll('.nav-link');
+    
+    // By default, the sidebar is hidden (no "open" class).
+    // Toggling the .open class slides from left on desktop, from bottom on mobile.
+    toggleButton.addEventListener('click', () => {
+      sidebarContainer.classList.toggle('open');
+    });
+    
+    // Switch to Ossuary
+    ossuaryLink.addEventListener('click', function() {
+      contentFrame.src = 'ossuary-simulator.html';
       navLinks.forEach(link => link.classList.remove('active'));
       this.classList.add('active');
+      // Optionally auto-hide the sidebar after selection:
+      sidebarContainer.classList.remove('open');
+    });
+
+    // Switch to Upgrade
+    upgradeLink.addEventListener('click', function() {
+      contentFrame.src = 'upgrade-simulator.html';
+      navLinks.forEach(link => link.classList.remove('active'));
+      this.classList.add('active');
+      // Optionally auto-hide the sidebar after selection:
+      sidebarContainer.classList.remove('open');
     });
   </script>
 </body>
