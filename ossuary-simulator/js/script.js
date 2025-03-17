@@ -207,10 +207,11 @@ function updateDisplay() {
   updateDistributionChart();
   updateJourneyChart();
   updatePercentileBoxes();
-  updateRatioCostTable();
+  // No longer needed, as we've integrated the cost calculation into the main table
+  // updateRatioCostTable();
 }
 
-// (A) Drop Rates Table
+// (A) Drop Rates Table with Effective Cost
 function updateDropRatesTable() {
   els.dropRatesTable.innerHTML = '';
   const allSim = state.simulationResults.allSimulations;
@@ -225,7 +226,64 @@ function updateDropRatesTable() {
     }
   }
 
-  // Build table rows
+  // Sort items by value (descending - best items first) for cost calculation
+  const sortedItems = [...state.items].sort((a, b) => {
+    if (b.value !== a.value) return b.value - a.value;
+    return b.probability - a.probability;
+  });
+
+  // Calculate "or better" probabilities for expected costs
+  const expectedCosts = {};
+  sortedItems.forEach((item, idx) => {
+    let orBetterProbability;
+    if (idx === 0) {
+      orBetterProbability = item.probability;
+    } else {
+      orBetterProbability = sortedItems
+        .slice(0, idx + 1)
+        .reduce((sum, it) => sum + it.probability, 0);
+    }
+    expectedCosts[item.name] = orBetterProbability < 0.0001 
+      ? Infinity 
+      : Math.round(state.ossuaryPrice / orBetterProbability);
+  });
+
+  // Calculate actual "or better" probabilities for actual costs
+  const actualProbs = {};
+  const actualCosts = {};
+  
+  // First get the actual probabilities from simulation results
+  const actualProbabilities = {};
+  state.items.forEach(it => {
+    actualProbabilities[it.name] = sums[it.name] / totalChests;
+  });
+  
+  // Sort items by value for actual cost calculation
+  const valueItemMap = {};
+  state.items.forEach(it => {
+    valueItemMap[it.name] = it.value;
+  });
+  
+  const sortedByValue = Object.keys(actualProbabilities)
+    .sort((a, b) => valueItemMap[b] - valueItemMap[a]);
+  
+  // Calculate "or better" probabilities
+  sortedByValue.forEach((name, idx) => {
+    let orBetterProb;
+    if (idx === 0) {
+      orBetterProb = actualProbabilities[name];
+    } else {
+      orBetterProb = sortedByValue
+        .slice(0, idx + 1)
+        .reduce((sum, n) => sum + actualProbabilities[n], 0);
+    }
+    actualProbs[name] = orBetterProb;
+    actualCosts[name] = orBetterProb < 0.0001 
+      ? Infinity 
+      : Math.round(state.ossuaryPrice / orBetterProb);
+  });
+
+  // Build table rows - sort by original order for display
   for (const it of state.items) {
     const row = document.createElement('tr');
     const tdName = document.createElement('td');
@@ -243,8 +301,22 @@ function updateDropRatesTable() {
     const tdAvg = document.createElement('td');
     tdAvg.className = 'text-right';
     tdAvg.textContent = (sums[it.name] / state.numSimulations).toFixed(2);
+    
+    // Expected effective cost
+    const tdExpCost = document.createElement('td');
+    tdExpCost.className = 'text-right';
+    tdExpCost.textContent = expectedCosts[it.name] === Infinity 
+      ? '∞' 
+      : expectedCosts[it.name].toLocaleString();
+    
+    // Actual effective cost
+    const tdActCost = document.createElement('td');
+    tdActCost.className = 'text-right';
+    tdActCost.textContent = actualCosts[it.name] === Infinity 
+      ? '∞' 
+      : actualCosts[it.name].toLocaleString();
 
-    row.append(tdName, tdExp, tdAct, tdAvg);
+    row.append(tdName, tdExp, tdAct, tdAvg, tdExpCost, tdActCost);
     els.dropRatesTable.appendChild(row);
   }
 }
@@ -253,6 +325,12 @@ function updateDropRatesTable() {
 function buildDistData() {
   const bucketSize = 0.5;
   const buckets = {};
+  
+  // Make sure we have data
+  if (!state.simulationResults || !state.simulationResults.finalAverages) {
+    return { labels: [], data: [] };
+  }
+  
   for (const val of state.simulationResults.finalAverages) {
     const bucket = Math.floor(val / bucketSize) * bucketSize;
     buckets[bucket] = (buckets[bucket] || 0) + 1;
@@ -276,7 +354,12 @@ function updateDistributionChart() {
   if (state.charts.distribution) {
     state.charts.distribution.destroy();
   }
+  
   const { labels, data } = buildDistData();
+  
+  // Skip if there's no data to show
+  if (!labels.length) return;
+  
   const ctx = els.distributionChart.getContext('2d');
   state.charts.distribution = new Chart(ctx, {
     type: 'bar',
@@ -322,15 +405,23 @@ function updateJourneyChart() {
   if (state.charts.journey) {
     state.charts.journey.destroy();
   }
+  
+  // Make sure we have data
+  if (!state.simulationResults || !state.simulationResults.averageJourney) {
+    return;
+  }
+  
   const ctx = els.journeyChart.getContext('2d');
 
   // Build data sets
   const dataSets = [];
+  
   // Mean line
   const meanData = state.simulationResults.averageJourney.map(pt => ({
     x: pt.chest,
     y: pt.runningAverage
   }));
+  
   dataSets.push({
     label: 'Mean (All Players)',
     data: meanData,
@@ -416,11 +507,10 @@ function updateJourneyChart() {
 // (D) Percentile boxes
 function updatePercentileBoxes() {
   const simRes = state.simulationResults;
-  if (!simRes) return;
+  if (!simRes || !simRes.finalAverages || !simRes.finalAverages.length) return;
 
   const arr = simRes.finalAverages;
-  if (!arr.length) return;
-
+  
   const idx5 = Math.floor(0.05 * (arr.length - 1));
   const idx50 = Math.floor(0.50 * (arr.length - 1));
   const idx95 = Math.floor(0.95 * (arr.length - 1));
@@ -430,67 +520,79 @@ function updatePercentileBoxes() {
   els.luckyAvg.textContent = arr[idx95].toFixed(2) + '%';
 }
 
-// (E) Ratio-based cost table
+// (E) New Effective Cost Calculation
 function updateRatioCostTable() {
   const tb = els.ratioCostTable;
   tb.innerHTML = '';
-
-  // Find baseline item (the one with highest probability)
-  let baseline = state.items[0];
-  for (const it of state.items) {
-    if (it.probability > baseline.probability) {
-      baseline = it;
-    }
-  }
-
-  // Sum item counts
-  const allSim = state.simulationResults.allSimulations;
-  const itemCounts = {};
-  state.items.forEach(it => (itemCounts[it.name] = 0));
-  allSim.forEach(sim => {
-    for (const nm in sim.itemCounts) {
-      itemCounts[nm] += sim.itemCounts[nm];
-    }
+  
+  // Sort items by value (descending - best items first)
+  const sortedItems = [...state.items].sort((a, b) => {
+    // First sort by value (higher % is better)
+    if (b.value !== a.value) return b.value - a.value;
+    // If same value, sort by probability (higher probability first)
+    return b.probability - a.probability;
   });
-
-  const baselineCount = itemCounts[baseline.name] || 0;
-  const baselineProb = baseline.probability;
-
-  // Show only Talisman items
-  const relevant = state.items.filter(it => it.name.includes('Talisman'));
-  relevant.forEach(it => {
+  
+  // Create table rows for each item
+  sortedItems.forEach((item, idx) => {
     const row = document.createElement('tr');
+    
+    // Item name
     const tdName = document.createElement('td');
-    tdName.textContent = it.name;
-
-    // theoretical ratio
-    let ratioTheo = Infinity;
-    if (baselineProb > 0 && it.probability > 0) {
-      ratioTheo = baselineProb / it.probability;
+    tdName.textContent = item.name;
+    
+    // Chance (%)
+    const tdChancePercent = document.createElement('td');
+    tdChancePercent.className = 'text-right';
+    tdChancePercent.textContent = (item.probability * 100).toFixed(1) + '%';
+    
+    // Chance (decimal)
+    const tdChanceDecimal = document.createElement('td');
+    tdChanceDecimal.className = 'text-right';
+    tdChanceDecimal.textContent = item.probability.toFixed(3);
+    
+    // Calculate probability for this item or better
+    let orBetterProbability;
+    if (idx === 0) {
+      // For the best item, it's just its own probability
+      orBetterProbability = item.probability;
+    } else {
+      // For other items, sum probabilities of all better items + this one
+      orBetterProbability = sortedItems
+        .slice(0, idx + 1)
+        .reduce((sum, it) => sum + it.probability, 0);
     }
-    const costTheo = isFinite(ratioTheo)
-      ? state.ossuaryPrice * ratioTheo
-      : Infinity;
-
-    const tdTheo = document.createElement('td');
-    tdTheo.className = 'text-right';
-    tdTheo.textContent = isFinite(costTheo) ? costTheo.toFixed(2) : '∞';
-
-    // empirical ratio
-    const cItem = itemCounts[it.name] || 0;
-    let ratioEmp = Infinity;
-    if (baselineCount > 0 && cItem > 0) {
-      ratioEmp = baselineCount / cItem;
+    
+    // "Or better" probability (%)
+    const tdCumulative = document.createElement('td');
+    tdCumulative.className = 'text-right';
+    tdCumulative.textContent = (orBetterProbability * 100).toFixed(1) + '%';
+    
+    // Formula
+    const tdFormula = document.createElement('td');
+    if (idx === 0) {
+      // Best item - baseline calculation 
+      tdFormula.textContent = 'always get at least this, so simply container cost';
+    } else {
+      // Calculation formula display
+      tdFormula.innerHTML = `
+        ${state.ossuaryPrice} ÷ ${orBetterProbability.toFixed(3)} = ${Math.round(state.ossuaryPrice / orBetterProbability)}
+      `;
     }
-    const costEmp = isFinite(ratioEmp)
-      ? state.ossuaryPrice * ratioEmp
-      : Infinity;
-
-    const tdEmp = document.createElement('td');
-    tdEmp.className = 'text-right';
-    tdEmp.textContent = isFinite(costEmp) ? costEmp.toFixed(2) : '∞';
-
-    row.append(tdName, tdTheo, tdEmp);
+    
+    // Effective Cost
+    const tdCost = document.createElement('td');
+    tdCost.className = 'text-right';
+    
+    if (orBetterProbability < 0.0001) {
+      // Avoid division by very small numbers
+      tdCost.textContent = '∞';
+    } else {
+      const effectiveCost = state.ossuaryPrice / orBetterProbability;
+      tdCost.textContent = Math.round(effectiveCost).toLocaleString();
+    }
+    
+    row.append(tdName, tdChancePercent, tdChanceDecimal, tdCumulative, tdFormula, tdCost);
     tb.appendChild(row);
   });
 }
@@ -522,7 +624,10 @@ function init() {
   initDropRateInputs();
   attachEvents();
   // Immediately run once so we have data on load
-  runSimulation();
+  setTimeout(() => {
+    runSimulation();
+  }, 100);
 }
 
+// Wait for DOM to be fully loaded
 document.addEventListener('DOMContentLoaded', init);

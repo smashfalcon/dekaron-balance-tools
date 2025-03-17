@@ -10,6 +10,20 @@
   <link rel="stylesheet" href="../assets/css/common.css">
   <!-- Simulator-specific CSS -->
   <link rel="stylesheet" href="css/style.css">
+  <style>
+    /* Additional styles for effective cost table */
+    #ratioCostTable td:nth-child(5) {
+      font-family: monospace;
+      white-space: nowrap;
+    }
+    
+    @media (max-width: 768px) {
+      #ratioCostTable td:nth-child(3),
+      #ratioCostTable th:nth-child(3) {
+        display: none;
+      }
+    }
+  </style>
 </head>
 <body>
   <!-- Navigation Bar -->
@@ -57,29 +71,29 @@
     </div>
 
     <!-- Results: Expected vs. Actual & Distribution -->
-    <div class="grid grid-2">
-      <div class="card">
-        <h2>Expected vs. Actual Drop Rates</h2>
-        <table>
-          <thead>
-            <tr>
-              <th>Item</th>
-              <th class="text-right">Expected %</th>
-              <th class="text-right">Actual %</th>
-              <th class="text-right">Avg per Player</th>
-            </tr>
-          </thead>
-          <tbody id="dropRatesTable"></tbody>
-        </table>
+    <div class="card">
+      <h2>Expected vs. Actual Drop Rates</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Item</th>
+            <th class="text-right">Expected %</th>
+            <th class="text-right">Actual %</th>
+            <th class="text-right">Avg per Player</th>
+            <th class="text-right">Expected Cost</th>
+            <th class="text-right">Actual Cost</th>
+          </tr>
+        </thead>
+        <tbody id="dropRatesTable"></tbody>
+      </table>
+    </div>
+    <div class="card">
+      <h2>Distribution of Final Averages</h2>
+      <div class="chart-container">
+        <canvas id="distributionChart"></canvas>
       </div>
-      <div class="card">
-        <h2>Distribution of Final Averages</h2>
-        <div class="chart-container">
-          <canvas id="distributionChart"></canvas>
-        </div>
-        <div style="text-align:center; color:var(--text-secondary); margin-top:0.5rem;">
-          Average Talisman % after <span id="chestsCount">10</span> chests
-        </div>
+      <div style="text-align:center; color:var(--text-secondary); margin-top:0.5rem;">
+        Average Talisman % after <span id="chestsCount">10</span> chests
       </div>
     </div>
 
@@ -113,20 +127,8 @@
       </div>
     </div>
 
-    <!-- Ratio-based Effective Cost Table -->
-    <div class="card">
-      <h2>Effective Cost (Ratio-based)</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>Talisman</th>
-            <th class="text-right">Theoretical Cost</th>
-            <th class="text-right">Empirical Cost</th>
-          </tr>
-        </thead>
-        <tbody id="ratioCostTable"></tbody>
-      </table>
-    </div>
+    <!-- Ratio-based Effective Cost Table -- REMOVED AS REQUESTED -->
+
   </div>
   
   <!-- Load common JavaScript -->
