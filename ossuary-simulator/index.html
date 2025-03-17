@@ -55,33 +55,36 @@
       </div>
       <div class="grid grid-2">
         <div class="form-group">
-          <label for="numChests">Number of Chests per Player</label>
+          <label for="numChests">Ossuaries per Player</label>
           <input type="number" id="numChests" min="1" max="1000" value="10"/>
         </div>
         <div class="form-group">
-          <label for="numSimulations">Number of Simulated Players</label>
-          <input type="number" id="numSimulations" min="1" max="10000" value="100"/>
+          <label for="numSimulations">Simulated Players</label>
+          <input type="number" id="numSimulations" min="1" max="10000" value="1000"/>
         </div>
       </div>
       <div class="form-group">
         <label for="ossuaryPrice">Ossuary Price</label>
         <input type="number" id="ossuaryPrice" min="1" value="240"/>
       </div>
-      <button id="runSimulation">Run Simulation</button>
+      <div style="display: flex; gap: 1rem;">
+        <button id="runSimulation">Run Simulation</button>
+        <button id="resetConfig" style="background-color: #72767d;">Reset Configuration</button>
+      </div>
     </div>
 
-    <!-- Results: Expected vs. Actual & Distribution -->
+    <!-- Results: Expected vs. Simulated & Effective Cost -->
     <div class="card">
-      <h2>Expected vs. Actual Drop Rates</h2>
+      <h2>Expected vs. Simulated Drop Rates & Talisman Effective Cost</h2>
       <table>
         <thead>
           <tr>
             <th>Item</th>
             <th class="text-right">Expected %</th>
-            <th class="text-right">Actual %</th>
+            <th class="text-right">Simulated %</th>
             <th class="text-right">Avg per Player</th>
-            <th class="text-right">Expected Cost</th>
-            <th class="text-right">Actual Cost</th>
+            <th class="text-right">Expected Effective Cost</th>
+            <th class="text-right">Simulated Effective Cost</th>
           </tr>
         </thead>
         <tbody id="dropRatesTable"></tbody>

@@ -10,6 +10,24 @@
   <link rel="stylesheet" href="../assets/css/common.css">
   <!-- Simulator-specific CSS -->
   <link rel="stylesheet" href="css/style.css">
+  <style>
+    /* Additional styles for colored dropdowns */
+    select option {
+      font-weight: normal;
+      background-color: var(--background-secondary);
+      color: var(--text-primary);
+    }
+    
+    /* Base Rate Input styling */
+    #configurationTable input[type="number"] {
+      background-color: #4f545c;
+      border: none;
+      color: var(--text-primary);
+      text-align: right;
+      padding: 2px 5px;
+      border-radius: 4px;
+    }
+  </style>
 </head>
 <body>
   <!-- Navigation Bar -->
@@ -88,20 +106,23 @@
         <label for="numSimulatedPlayers">Number of Simulated Players</label>
         <input type="number" id="numSimulatedPlayers" min="1" max="100000" value="1000" />
       </div>
-      <button id="runSimulationButton">Run Simulation</button>
+      <div style="display: flex; gap: 1rem;">
+        <button id="runSimulationButton">Run Simulation</button>
+        <button id="resetConfigButton" style="background-color: #72767d;">Reset Configuration</button>
+      </div>
     </div>
 
-    <!-- Theoretical Results Card -->
+    <!-- Expected Results Card -->
     <div class="card mb-3">
-      <h2>Theoretical Results</h2>
+      <h2>Expected Results</h2>
       <div id="resultsContainer" class="mb-3">
         <!-- Results will display here -->
       </div>
     </div>
 
-    <!-- Theoretical Probability Chart Card -->
+    <!-- Probability Distribution Chart Card -->
     <div class="card mb-3">
-      <h2>Theoretical Probability Distribution</h2>
+      <h2>Probability Distribution</h2>
       <div class="chart-container">
         <canvas id="probabilityChart"></canvas>
       </div>
@@ -112,7 +133,7 @@
 
     <!-- Simulation Results: Distribution of Attempts -->
     <div class="card mb-3">
-      <h2>Simulation Results: Distribution of Final Attempts</h2>
+      <h2>Distribution of Attempts</h2>
       <div class="chart-container">
         <canvas id="attemptsDistributionChart"></canvas>
       </div>
@@ -124,7 +145,7 @@
     <!-- Player Experience Insights -->
     <div class="card mb-3">
       <h2>Player Experience Insights</h2>
-      <div class="grid grid-3" id="experienceInsights">
+      <div class="grid" style="grid-template-columns: 1fr 1fr 1fr; gap: 1rem;" id="experienceInsights">
         <div class="percentile-card lucky">
           <h4>Lucky Players (5th Percentile)</h4>
           <p class="text-muted">

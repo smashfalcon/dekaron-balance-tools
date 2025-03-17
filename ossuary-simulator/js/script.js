@@ -9,7 +9,7 @@ const state = {
     '+50% Talisman': 0.1
   },
   numChests: 10,
-  numSimulations: 100,
+  numSimulations: 1000,
   ossuaryPrice: 240,
   items: [],
   simulationResults: null,
@@ -29,6 +29,7 @@ const els = {
   numSimulations: document.getElementById('numSimulations'),
   ossuaryPrice: document.getElementById('ossuaryPrice'),
   runSimulation: document.getElementById('runSimulation'),
+  resetConfig: document.getElementById('resetConfig'),
   dropRatesTable: document.getElementById('dropRatesTable'),
   distributionChart: document.getElementById('distributionChart'),
   journeyChart: document.getElementById('journeyChart'),
@@ -309,7 +310,7 @@ function updateDropRatesTable() {
       ? '∞' 
       : expectedCosts[it.name].toLocaleString();
     
-    // Actual effective cost
+    // Simulated effective cost
     const tdActCost = document.createElement('td');
     tdActCost.className = 'text-right';
     tdActCost.textContent = actualCosts[it.name] === Infinity 
@@ -324,30 +325,101 @@ function updateDropRatesTable() {
 // (B) Distribution of final averages
 function buildDistData() {
   const bucketSize = 0.5;
-  const buckets = {};
+  const simulatedBuckets = {};
   
   // Make sure we have data
   if (!state.simulationResults || !state.simulationResults.finalAverages) {
-    return { labels: [], data: [] };
+    return { labels: [], simulatedData: [], expectedData: [] };
   }
   
+  // Build actual distribution from simulation
   for (const val of state.simulationResults.finalAverages) {
     const bucket = Math.floor(val / bucketSize) * bucketSize;
-    buckets[bucket] = (buckets[bucket] || 0) + 1;
+    simulatedBuckets[bucket] = (simulatedBuckets[bucket] || 0) + 1;
   }
-  // 1) Convert keys to numbers and sort them ascending
-  const sortedKeys = Object.keys(buckets)
-    .map(k => parseFloat(k))
-    .sort((a, b) => a - b);
-
-  // 2) Build labels and data in sorted order
-  const labels = sortedKeys.map(k => {
-    const low = k.toFixed(1);
-    const high = (k + bucketSize).toFixed(1);
+  
+  // Calculate the theoretical distribution for the average talisman %
+  const numPlayers = state.simulationResults.finalAverages.length;
+  
+  // Calculate expected value (mean) of a single chest
+  const expectedSingleChestValue = state.items.reduce(
+    (sum, item) => sum + item.value * item.probability, 
+    0
+  );
+  
+  // Variance of a single chest
+  const varianceSingleChest = state.items.reduce(
+    (sum, item) => sum + Math.pow(item.value - expectedSingleChestValue, 2) * item.probability,
+    0
+  );
+  
+  // For the average of N chests, the variance scales by 1/N
+  const varianceOfAverage = varianceSingleChest / state.numChests;
+  const stdDevOfAverage = Math.sqrt(varianceOfAverage);
+  
+  // Get all bucket keys from the simulation
+  const allBuckets = new Set(Object.keys(simulatedBuckets).map(k => parseFloat(k)));
+  
+  // Extend range to cover the theoretical distribution's tails
+  const minRange = Math.max(0, expectedSingleChestValue - 4 * stdDevOfAverage);
+  const maxRange = expectedSingleChestValue + 4 * stdDevOfAverage;
+  
+  for (let x = minRange; x <= maxRange; x += bucketSize) {
+    allBuckets.add(parseFloat(x.toFixed(1)));
+  }
+  
+  // Convert set to sorted array
+  const sortedBuckets = Array.from(allBuckets).sort((a, b) => a - b);
+  
+  // Calculate theoretical distribution (expected number in each bucket)
+  const expectedBuckets = {};
+  
+  for (const bucket of sortedBuckets) {
+    // Calculate normal probability between bucket and bucket+bucketSize
+    const z1 = (bucket - expectedSingleChestValue) / stdDevOfAverage;
+    const z2 = (bucket + bucketSize - expectedSingleChestValue) / stdDevOfAverage;
+    const prob = normalCDF(z2) - normalCDF(z1);
+    
+    // Expected count in this bucket
+    expectedBuckets[bucket] = Math.round(prob * numPlayers);
+  }
+  
+  // Generate labels and datasets
+  const labels = sortedBuckets.map(bucket => {
+    const low = bucket.toFixed(1);
+    const high = (bucket + bucketSize).toFixed(1);
     return `${low}-${high}`;
   });
-  const data = sortedKeys.map(k => buckets[k]);
-  return { labels, data };
+  
+  const simulatedData = sortedBuckets.map(bucket => simulatedBuckets[bucket] || 0);
+  const expectedData = sortedBuckets.map(bucket => expectedBuckets[bucket] || 0);
+  
+  return { labels, simulatedData, expectedData };
+}
+
+// Helper function for normal CDF (cumulative distribution function)
+function normalCDF(z) {
+  // Faster approximation of normal CDF
+  if (z < -6) return 0;
+  if (z > 6) return 1;
+  
+  const b1 =  0.31938153;
+  const b2 = -0.356563782;
+  const b3 =  1.781477937;
+  const b4 = -1.821255978;
+  const b5 =  1.330274429;
+  const p  =  0.2316419;
+  const c  =  0.39894228;
+
+  if (z >= 0.0) {
+    const t = 1.0 / (1.0 + p * z);
+    return 1.0 - c * Math.exp(-z * z / 2.0) * t * 
+      (t * (t * (t * (t * b5 + b4) + b3) + b2) + b1);
+  } else {
+    const t = 1.0 / (1.0 - p * z);
+    return c * Math.exp(-z * z / 2.0) * t * 
+      (t * (t * (t * (t * b5 + b4) + b3) + b2) + b1);
+  }
 }
 
 function updateDistributionChart() {
@@ -355,7 +427,7 @@ function updateDistributionChart() {
     state.charts.distribution.destroy();
   }
   
-  const { labels, data } = buildDistData();
+  const { labels, simulatedData, expectedData } = buildDistData();
   
   // Skip if there's no data to show
   if (!labels.length) return;
@@ -367,9 +439,22 @@ function updateDistributionChart() {
       labels,
       datasets: [
         {
-          label: 'Number of Players',
-          data,
-          backgroundColor: '#5865f2'
+          label: 'Simulated Number of Players',
+          data: simulatedData,
+          backgroundColor: '#5865f2',
+          order: 2
+        },
+        {
+          label: 'Expected Number of Players',
+          data: expectedData,
+          type: 'line',
+          borderColor: '#ed4245',
+          backgroundColor: '#ed4245',
+          borderWidth: 2,
+          pointRadius: 0,
+          tension: 0.1,
+          fill: false,
+          order: 1
         }
       ]
     },
@@ -600,12 +685,18 @@ function updateRatioCostTable() {
 // =============== Attach events ===============
 function attachEvents() {
   els.runSimulation.addEventListener('click', runSimulation);
+  
+  // Add event for reset button
+  const resetButton = document.getElementById('resetConfig');
+  if (resetButton) {
+    resetButton.addEventListener('click', resetConfiguration);
+  }
 
   els.numChests.addEventListener('input', () => {
     state.numChests = parseInt(els.numChests.value) || 10;
   });
   els.numSimulations.addEventListener('input', () => {
-    state.numSimulations = parseInt(els.numSimulations.value) || 100;
+    state.numSimulations = parseInt(els.numSimulations.value) || 1000;
   });
   els.ossuaryPrice.addEventListener('input', () => {
     state.ossuaryPrice = parseFloat(els.ossuaryPrice.value) || 240;
@@ -617,6 +708,33 @@ function attachEvents() {
       updateJourneyChart();
     }
   });
+}
+
+// Reset configuration to default values
+function resetConfiguration() {
+  // Reset the drop rates to default
+  state.rates = {
+    '+20% Talisman': 50,
+    '+25% Talisman': 45,
+    '+30% Talisman': 4.9,
+    '+50% Talisman': 0.1
+  };
+  
+  // Reset other configuration values
+  state.numChests = 10;
+  state.numSimulations = 1000;
+  state.ossuaryPrice = 240;
+  
+  // Update the UI to reflect the reset values
+  els.numChests.value = state.numChests;
+  els.numSimulations.value = state.numSimulations;
+  els.ossuaryPrice.value = state.ossuaryPrice;
+  
+  // Rebuild the drop rate inputs
+  initDropRateInputs();
+  
+  // Run simulation with the reset configuration
+  runSimulation();
 }
 
 // =============== Master init function ===============

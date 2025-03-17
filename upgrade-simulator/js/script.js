@@ -30,12 +30,12 @@ const state = {
     9: 0.10
   },
   talismanOptions: [
-    { name: "None", rate: 0 },
-    { name: "+18% Talisman", rate: 0.18 },
-    { name: "+20% Talisman", rate: 0.20 },
-    { name: "+25% Talisman", rate: 0.25 },
-    { name: "+30% Talisman", rate: 0.30 },
-    { name: "+50% Talisman", rate: 0.50 }
+    { name: "None", rate: 0, color: "" },
+    { name: "+18% Talisman", rate: 0.18, color: "#faa61a" },
+    { name: "+20% Talisman", rate: 0.20, color: "#ed4245" },
+    { name: "+25% Talisman", rate: 0.25, color: "#3ba55c" },
+    { name: "+30% Talisman", rate: 0.30, color: "#5865f2" },
+    { name: "+50% Talisman", rate: 0.50, color: "#9b59b6" }
   ],
   // User inputs (defaults):
   startingPoint: 0,
@@ -50,7 +50,8 @@ const state = {
     attemptsDistribution: null
   },
   // Simulation results
-  simulationAttempts: []
+  simulationAttempts: [],
+  simulationSuccesses: []
 };
 
 const elements = {
@@ -61,6 +62,7 @@ const elements = {
   targetError: document.getElementById("targetError"),
   numSimulatedPlayers: document.getElementById("numSimulatedPlayers"),
   runSimulationButton: document.getElementById("runSimulationButton"),
+  resetConfigButton: document.getElementById("resetConfigButton"),
   resultsContainer: document.getElementById("resultsContainer"),
   probabilityChart: document.getElementById("probabilityChart"),
   confidenceInfo: document.getElementById("confidenceInfo"),
@@ -90,34 +92,80 @@ function initConfigurationTable() {
   calculateCompoundRates();
   for (let plus = 1; plus <= 9; plus++) {
     const row = document.createElement("tr");
+    
+    // Plus level cell
     const plusCell = document.createElement("td");
     plusCell.textContent = `+${plus}`;
+    
+    // Base rate cell (now editable)
     const baseRateCell = document.createElement("td");
     baseRateCell.className = "text-right";
-    baseRateCell.textContent = `${(state.baseRates[plus] * 100).toFixed(0)}%`;
+    const baseRateInput = document.createElement("input");
+    baseRateInput.type = "number";
+    baseRateInput.min = "0";
+    baseRateInput.max = "100";
+    baseRateInput.step = "1";
+    baseRateInput.style.width = "60px";
+    baseRateInput.value = (state.baseRates[plus] * 100).toFixed(0);
+    baseRateInput.id = `base-rate-${plus}`;
+    baseRateInput.addEventListener("input", (e) => {
+      const newValue = parseInt(e.target.value) || 0;
+      state.baseRates[plus] = newValue / 100;
+      updateConfigurationTable();
+    });
+    baseRateCell.appendChild(baseRateInput);
+    baseRateCell.appendChild(document.createTextNode("%"));
+    
+    // Talisman selection cell
     const talismanCell = document.createElement("td");
     const selectEl = document.createElement("select");
     selectEl.id = `talisman-${plus}`;
+    selectEl.style.width = "150px";
+    
     state.talismanOptions.forEach((option, index) => {
       const opt = document.createElement("option");
       opt.value = index;
       opt.textContent = option.name;
+      if (option.color) {
+        opt.style.backgroundColor = option.color;
+        opt.style.color = "#ffffff";
+        if (option.color === "#faa61a") {
+          opt.style.color = "#000000"; // Yellow needs dark text
+        }
+      }
       selectEl.appendChild(opt);
     });
+    
     selectEl.value = state.talismanStrategy[plus];
     selectEl.addEventListener("change", (e) => {
       state.talismanStrategy[plus] = parseInt(e.target.value);
       updateConfigurationTable();
     });
+    
+    // Style the select element based on selected option
+    const selectedOption = state.talismanOptions[state.talismanStrategy[plus]];
+    if (selectedOption.color) {
+      selectEl.style.backgroundColor = selectedOption.color;
+      selectEl.style.color = "#ffffff";
+      if (selectedOption.color === "#faa61a") {
+        selectEl.style.color = "#000000"; // Yellow needs dark text
+      }
+    }
+    
     talismanCell.appendChild(selectEl);
+    
+    // Total success rate cell
     const totalRateCell = document.createElement("td");
     totalRateCell.className = "text-right";
     totalRateCell.id = `total-rate-${plus}`;
     totalRateCell.textContent = calculateTotalSuccessRate(plus).toFixed(2) + "%";
+    
+    // Compound success rate cell
     const compoundRateCell = document.createElement("td");
     compoundRateCell.className = "text-right";
     compoundRateCell.id = `compound-rate-${plus}`;
     compoundRateCell.textContent = (state.compoundRates[plus] * 100).toFixed(2) + "%";
+    
     row.appendChild(plusCell);
     row.appendChild(baseRateCell);
     row.appendChild(talismanCell);
@@ -137,6 +185,22 @@ function updateConfigurationTable() {
     const compoundRateCell = document.getElementById(`compound-rate-${plus}`);
     if (compoundRateCell) {
       compoundRateCell.textContent = (state.compoundRates[plus] * 100).toFixed(2) + "%";
+    }
+    
+    // Update select element styling
+    const selectEl = document.getElementById(`talisman-${plus}`);
+    if (selectEl) {
+      const selectedOption = state.talismanOptions[state.talismanStrategy[plus]];
+      if (selectedOption.color) {
+        selectEl.style.backgroundColor = selectedOption.color;
+        selectEl.style.color = "#ffffff";
+        if (selectedOption.color === "#faa61a") {
+          selectEl.style.color = "#000000"; // Yellow needs dark text
+        }
+      } else {
+        selectEl.style.backgroundColor = "";
+        selectEl.style.color = "";
+      }
     }
   }
 }
@@ -163,6 +227,56 @@ function attachEventListeners() {
   elements.runSimulationButton.addEventListener("click", () => {
     runAllCalculations();
   });
+  
+  if (elements.resetConfigButton) {
+    elements.resetConfigButton.addEventListener("click", resetConfiguration);
+  }
+}
+
+function resetConfiguration() {
+  // Reset base rates
+  state.baseRates = {
+    1: 0.95,
+    2: 0.90,
+    3: 0.85,
+    4: 0.70,
+    5: 0.60,
+    6: 0.50,
+    7: 0.30,
+    8: 0.20,
+    9: 0.10
+  };
+  
+  // Reset talisman strategy
+  state.talismanStrategy = {
+    1: 0,
+    2: 0,
+    3: 0,
+    4: 0,
+    5: 1,
+    6: 1,
+    7: 2,
+    8: 3,
+    9: 4
+  };
+  
+  // Reset user inputs
+  state.startingPoint = 0;
+  state.targetPlus = 9;
+  state.confidenceLevel = 95;
+  state.numSimulatedPlayers = 1000;
+  
+  // Update UI elements
+  elements.startingPoint.value = state.startingPoint;
+  elements.targetPlus.value = state.targetPlus;
+  elements.confidenceLevel.value = state.confidenceLevel;
+  elements.numSimulatedPlayers.value = state.numSimulatedPlayers;
+  
+  // Re-initialize configuration table
+  initConfigurationTable();
+  
+  // Run calculations
+  runAllCalculations();
 }
 
 function validateSelections() {
@@ -193,12 +307,24 @@ function calculateTotalSuccessRate(plus) {
 }
 
 function calculateSuccessProbability() {
-  let startProb = 1.0;
-  if (state.startingPoint > 0) {
-    startProb = state.compoundRates[state.startingPoint];
+  // This calculates the REAL probability of succeeding in one complete attempt
+  // Success means going from starting point to target without any failures
+  
+  let probability = 1.0;
+  
+  // For each step from starting point to target
+  for (let plus = state.startingPoint; plus < state.targetPlus; plus++) {
+    // Calculate success rate for this step including talisman
+    const baseRate = state.baseRates[plus + 1];
+    const talismanIndex = state.talismanStrategy[plus + 1];
+    const talismanBoost = state.talismanOptions[talismanIndex].rate;
+    const stepSuccessRate = baseRate + talismanBoost;
+    
+    // Multiply by the success rate for this step (capped at 100%)
+    probability *= Math.min(1.0, stepSuccessRate);
   }
-  const targetProb = state.compoundRates[state.targetPlus];
-  return targetProb / startProb;
+  
+  return probability;
 }
 
 function calculateAverageAttempts() {
@@ -209,30 +335,33 @@ function calculateAverageAttempts() {
 function calculateConfidenceAttempts(confLevel) {
   const p = calculateSuccessProbability();
   const c = confLevel / 100;
+  
   if (p < 1e-9) {
     return Number.MAX_SAFE_INTEGER;
   }
+  
   const denominator = Math.log(1 - p);
   if (Math.abs(denominator) < 1e-9) {
     return Number.MAX_SAFE_INTEGER;
   }
+  
   return Math.ceil(Math.log(1 - c) / denominator);
 }
 
-function updateTheoreticalDisplay() {
-  const avgAttempts = calculateAverageAttempts();
+function updateExpectedDisplay() {
+  const prob = calculateSuccessProbability();
+  const avgAttempts = 1 / prob;
   const confAttempts = calculateConfidenceAttempts(state.confidenceLevel);
-  const successProb = calculateSuccessProbability();
 
   elements.resultsContainer.innerHTML = `
     <p class="mb-2">
-      <strong>From +${state.startingPoint} to +${state.targetPlus} (no degrade theoretical):</strong>
+      <strong>From +${state.startingPoint} to +${state.targetPlus}:</strong>
     </p>
     <p class="mb-2">
-      Expected attempts (theoretical): <strong>${avgAttempts.toFixed(2)}</strong>
+      Expected attempts: <strong>${avgAttempts.toFixed(2)}</strong>
     </p>
     <p class="mb-2">
-      Success probability per attempt: <strong>${(successProb * 100).toFixed(2)}%</strong>
+      Success probability per attempt: <strong>${(prob * 100).toFixed(4)}%</strong>
     </p>
     <p>
       Attempts for ${state.confidenceLevel}% confidence: <strong>${confAttempts}</strong>
@@ -241,21 +370,50 @@ function updateTheoreticalDisplay() {
 }
 
 function generateProbabilityData() {
+  // Calculate the real success probability per attempt
   const p = calculateSuccessProbability();
-  const confAttempts = calculateConfidenceAttempts(state.confidenceLevel);
-
-  const data = [];
-  let cumProb = 0;
-  for (let i = 1; i <= confAttempts; i++) {
-    const prob = p * Math.pow(1 - p, i - 1);
-    cumProb += prob;
-    data.push({
+  const avgAttempts = 1 / p;
+  
+  // Cap the maximum attempts to display
+  const maxAttempts = Math.min(Math.ceil(avgAttempts * 3), 100);
+  
+  const expectedData = [];
+  
+  // Calculate expected data (geometric distribution)
+  let cumExpectedProb = 0;
+  for (let i = 1; i <= maxAttempts; i++) {
+    // Probability of success on exactly attempt i
+    const expectedProb = p * Math.pow(1 - p, i - 1);
+    cumExpectedProb += expectedProb;
+    
+    expectedData.push({
       attempt: i,
-      probability: prob,
-      cumulativeProbability: cumProb
+      probability: expectedProb,
+      cumulativeProbability: cumExpectedProb
     });
   }
-  return data;
+  
+  // Calculate simulation data if available
+  const simulatedData = [];
+  
+  if (state.simulationAttempts.length > 0) {
+    // Sort attempts to calculate cumulative probability
+    const sortedAttempts = [...state.simulationAttempts].sort((a, b) => a - b);
+    const numPlayers = sortedAttempts.length;
+    
+    // For each attempt number, calculate how many players succeeded by that attempt
+    for (let i = 1; i <= maxAttempts; i++) {
+      const successfulPlayers = sortedAttempts.filter(attempts => attempts <= i).length;
+      const simulatedCumulativeProb = successfulPlayers / numPlayers;
+      
+      simulatedData.push({
+        attempt: i,
+        cumulativeProbability: simulatedCumulativeProb
+      });
+    }
+  }
+  
+  return { expectedData, simulatedData, maxAttempts };
 }
 
 function updateProbabilityChart() {
@@ -264,32 +422,44 @@ function updateProbabilityChart() {
   }
   if (!elements.probabilityChart) return;
 
-  const data = generateProbabilityData();
-  const chartData = {
-    labels: data.map(d => d.attempt),
-    datasets: [
-      {
-        label: "Success Probability",
-        data: data.map(d => d.probability * 100),
-        backgroundColor: "rgba(88, 101, 242, 0.5)",
-        borderColor: "rgba(88, 101, 242, 1)",
-        borderWidth: 1
-      },
-      {
-        label: "Cumulative Probability",
-        data: data.map(d => d.cumulativeProbability * 100),
-        backgroundColor: "rgba(59, 165, 92, 0.5)",
-        borderColor: "rgba(59, 165, 92, 1)",
-        borderWidth: 1,
-        type: "line"
-      }
-    ]
-  };
+  const { expectedData, simulatedData, maxAttempts } = generateProbabilityData();
+  
+  const labels = Array.from({ length: maxAttempts }, (_, i) => i + 1);
+  
+  const datasets = [
+    {
+      label: "Expected Success Probability",
+      data: expectedData.map(d => d.probability * 100),
+      backgroundColor: "rgba(88, 101, 242, 0.5)",
+      borderColor: "rgba(88, 101, 242, 1)",
+      borderWidth: 1
+    },
+    {
+      label: "Expected Cumulative Probability",
+      data: expectedData.map(d => d.cumulativeProbability * 100),
+      backgroundColor: "rgba(59, 165, 92, 0.5)",
+      borderColor: "rgba(59, 165, 92, 1)",
+      borderWidth: 1,
+      type: "line"
+    }
+  ];
+  
+  // Add simulated data if available
+  if (simulatedData.length > 0) {
+    datasets.push({
+      label: "Simulated Cumulative Probability",
+      data: simulatedData.map(d => d.cumulativeProbability * 100),
+      backgroundColor: "rgba(250, 166, 26, 0.5)",
+      borderColor: "rgba(250, 166, 26, 1)",
+      borderWidth: 2,
+      type: "line"
+    });
+  }
 
   const ctx = elements.probabilityChart.getContext("2d");
   state.charts.probability = new Chart(ctx, {
     type: "bar",
-    data: chartData,
+    data: { labels, datasets },
     options: {
       responsive: true,
       maintainAspectRatio: false,
@@ -324,7 +494,7 @@ function updateProbabilityChart() {
       plugins: {
         legend: {
           labels: {
-            color: "#dcddde"
+            color: "#b9bbbe"
           }
         },
         tooltip: {
@@ -343,7 +513,7 @@ function updateProbabilityChart() {
   const confAttempts = calculateConfidenceAttempts(state.confidenceLevel);
   elements.confidenceInfo.innerHTML = `
     <div>
-      <strong>${state.confidenceLevel}% Confidence (no degrade):</strong> 
+      <strong>${state.confidenceLevel}% Confidence:</strong> 
       You need <strong>${confAttempts}</strong> attempts to have a 
       ${state.confidenceLevel}% chance of reaching +${state.targetPlus} from +${state.startingPoint}.
     </div>
@@ -352,19 +522,47 @@ function updateProbabilityChart() {
 
 function runSimulation() {
   state.simulationAttempts = [];
-  for (let i = 0; i < state.numSimulatedPlayers; i++) {
-    let currentPlus = state.startingPoint;
+  state.simulationSuccesses = [];
+  const numPlayers = state.numSimulatedPlayers;
+  
+  for (let i = 0; i < numPlayers; i++) {
     let attempts = 0;
-    while (currentPlus < state.targetPlus) {
-      attempts++;
-      const successRate = calculateTotalSuccessRate(currentPlus + 1) / 100;
-      if (Math.random() < successRate) {
-        currentPlus++;
-      } else {
-        currentPlus = state.startingPoint;
+    let success = false;
+    
+    while (attempts < 1000 && !success) { // Cap at 1000 attempts
+      attempts++; // Count this as one complete attempt
+      
+      // Try to go from starting point to target
+      let currentPlus = state.startingPoint;
+      let reachedTarget = true; // Assume success until we fail
+      
+      // For each step in the upgrade path
+      while (currentPlus < state.targetPlus) {
+        // Calculate success rate for this step
+        const baseRate = state.baseRates[currentPlus + 1];
+        const talismanIndex = state.talismanStrategy[currentPlus + 1];
+        const talismanBoost = state.talismanOptions[talismanIndex].rate;
+        const stepSuccessRate = Math.min(1.0, baseRate + talismanBoost);
+        
+        // Check if this individual upgrade succeeds
+        if (Math.random() < stepSuccessRate) {
+          // Success - go up one plus level
+          currentPlus++;
+        } else {
+          // Failure - this attempt failed
+          reachedTarget = false;
+          break; // End this attempt
+        }
+      }
+      
+      // If we made it through all steps, this attempt succeeded
+      if (reachedTarget) {
+        success = true;
       }
     }
+    
     state.simulationAttempts.push(attempts);
+    state.simulationSuccesses.push(success);
   }
 }
 
@@ -373,44 +571,93 @@ function updateSimulationDisplay() {
   updatePercentileCards();
 }
 
+function calculateExpectedDistribution() {
+  // Calculate real success probability for one complete attempt
+  const p = calculateSuccessProbability();
+  if (p <= 0) return [];
+  
+  const avgAttempts = 1 / p;
+  const maxAttempts = Math.min(Math.ceil(avgAttempts * 5), 1000);
+  
+  // Using geometric distribution for attempts to reach target
+  const distribution = new Array(maxAttempts + 1).fill(0);
+  
+  // Calculate probability for each number of attempts
+  for (let i = 1; i <= maxAttempts; i++) {
+    distribution[i] = p * Math.pow(1 - p, i - 1);
+  }
+  
+  return distribution;
+}
+
 function buildAttemptsBins() {
   const sorted = state.simulationAttempts.slice().sort((a, b) => a - b);
   if (!sorted.length) {
-    return { labels: [], counts: [] };
+    return { labels: [], counts: [], expectedCounts: [] };
   }
+  
   const binCount = 20;
   const minVal = sorted[0];
   const maxVal = sorted[sorted.length - 1];
+  
   if (minVal === maxVal) {
     return {
       labels: [`${minVal}`],
-      counts: [sorted.length]
+      counts: [sorted.length],
+      expectedCounts: [sorted.length]
     };
   }
+  
+  // Create bins with equal width
   const range = maxVal - minVal + 1;
   const binSize = Math.ceil(range / binCount);
   const bins = [];
+  
   for (let i = 0; i < binCount; i++) {
     const start = minVal + i * binSize;
     const end = start + binSize - 1;
     if (start > maxVal) break;
-    bins.push({ start, end, count: 0 });
+    bins.push({ start, end, count: 0, expectedCount: 0 });
   }
+  
+  // Count actual attempts from simulation
   sorted.forEach(val => {
     const idx = Math.floor((val - minVal) / binSize);
     const clamped = Math.min(idx, bins.length - 1);
-    bins[clamped].count++;
+    if (clamped >= 0) {
+      bins[clamped].count++;
+    }
   });
+  
+  // Calculate expected distribution
+  const expectedDist = calculateExpectedDistribution();
+  const numPlayers = state.simulationAttempts.length;
+  
+  // Calculate expected counts for each bin
+  bins.forEach(bin => {
+    bin.expectedCount = 0;
+    for (let i = bin.start; i <= bin.end; i++) {
+      if (i > 0 && i < expectedDist.length) {
+        bin.expectedCount += expectedDist[i] * numPlayers;
+      }
+    }
+  });
+  
+  // Format data for chart
   const labels = [];
   const counts = [];
+  const expectedCounts = [];
+  
   bins.forEach(b => {
-    if (b.count > 0 || b.start <= maxVal) {
+    if (b.count > 0 || b.expectedCount > 0 || b.start <= maxVal) {
       let label = b.start === b.end ? `${b.start}` : `${b.start}-${b.end}`;
       labels.push(label);
       counts.push(b.count);
+      expectedCounts.push(Math.round(b.expectedCount));
     }
   });
-  return { labels, counts };
+  
+  return { labels, counts, expectedCounts };
 }
 
 function updateAttemptsDistributionChart() {
@@ -418,23 +665,37 @@ function updateAttemptsDistributionChart() {
     state.charts.attemptsDistribution.destroy();
   }
   if (!elements.attemptsDistributionChart) return;
-  const { labels, counts } = buildAttemptsBins();
-  const chartData = {
-    labels,
-    datasets: [
-      {
-        label: "Number of Players",
-        data: counts,
-        backgroundColor: "#5865f2",
-        borderColor: "#4752c4",
-        borderWidth: 1
-      }
-    ]
-  };
+  
+  const { labels, counts, expectedCounts } = buildAttemptsBins();
+  
+  const datasets = [
+    {
+      label: "Simulated Players",
+      data: counts,
+      backgroundColor: "#5865f2",
+      borderColor: "#4752c4",
+      borderWidth: 1
+    }
+  ];
+  
+  // Add expected counts if available
+  if (expectedCounts.length > 0) {
+    datasets.push({
+      label: "Expected Players",
+      data: expectedCounts,
+      type: "line",
+      borderColor: "#ed4245",
+      backgroundColor: "#ed4245",
+      borderWidth: 2,
+      pointRadius: 0,
+      tension: 0.1
+    });
+  }
+  
   const ctx = elements.attemptsDistributionChart.getContext("2d");
   state.charts.attemptsDistribution = new Chart(ctx, {
     type: "bar",
-    data: chartData,
+    data: { labels, datasets },
     options: {
       responsive: true,
       maintainAspectRatio: false,
@@ -469,13 +730,13 @@ function updateAttemptsDistributionChart() {
       plugins: {
         legend: {
           labels: {
-            color: "#dcddde"
+            color: "#b9bbbe"
           }
         },
         tooltip: {
           callbacks: {
             label: function (context) {
-              return `${context.label}: ${context.parsed.y} players`;
+              return `${context.dataset.label}: ${context.parsed.y}`;
             }
           }
         }
@@ -514,9 +775,9 @@ function runAllCalculations() {
   state.numSimulatedPlayers = parseInt(elements.numSimulatedPlayers.value);
   if (state.confidenceLevel < 1) state.confidenceLevel = 1;
   if (state.confidenceLevel > 99.99) state.confidenceLevel = 99.99;
-  updateTheoreticalDisplay();
-  updateProbabilityChart();
+  updateExpectedDisplay();
   runSimulation();
+  updateProbabilityChart();
   updateSimulationDisplay();
 }
 
