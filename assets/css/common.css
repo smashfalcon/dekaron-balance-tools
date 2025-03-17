@@ -1,0 +1,169 @@
+/* assets/css/common.css */
+
+:root {
+  --background: #2c2d31;
+  --background-secondary: #36393f;
+  --background-tertiary: #202225;
+  --text-primary: #dcddde;
+  --text-secondary: #b9bbbe;
+  --text-muted: #72767d;
+  --blurple: #5865f2;
+  --red: #ed4245;
+  --green: #3ba55c;
+  --yellow: #faa61a;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: var(--background);
+  color: var(--text-primary);
+  line-height: 1.6;
+}
+
+/* Common layout */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+h1, h2, h3, h4 {
+  margin-bottom: 1rem;
+  color: var(--text-primary);
+}
+
+/* Card component */
+.card {
+  background-color: var(--background-secondary);
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+}
+
+/* Grid layouts */
+.grid {
+  display: grid;
+  gap: 1.5rem;
+}
+.grid-2 {
+  grid-template-columns: 1fr;
+}
+@media(min-width:768px) {
+  .grid-2 {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* Form elements */
+input[type="number"],
+select {
+  background-color: #4f545c;
+  color: var(--text-primary);
+  border: none;
+  padding: 0.5rem;
+  border-radius: 4px;
+  width: 100%;
+  margin-bottom: 1rem;
+}
+
+button {
+  background-color: var(--blurple);
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+button:hover {
+  background-color: #4752c4;
+}
+button:disabled {
+  background-color: var(--text-muted);
+  cursor: not-allowed;
+}
+
+label {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: var(--text-secondary);
+}
+
+.form-group {
+  margin-bottom: 1rem;
+}
+
+.error {
+  color: var(--red);
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+}
+
+/* Tables */
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+th, td {
+  padding: 0.5rem;
+  border: 1px solid #555;
+}
+th {
+  background-color: var(--background-tertiary);
+}
+tr:nth-child(even) {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+/* Chart container */
+.chart-container {
+  position: relative;
+  height: 350px;
+  width: 100%;
+}
+
+.text-right {
+  text-align: right;
+}
+.text-center {
+  text-align: center;
+}
+
+/* Checkbox container */
+.checkbox-container {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+.checkbox-container input {
+  margin-right: 0.5rem;
+  accent-color: var(--blurple);
+}
+
+/* Percentile cards */
+.percentile-card {
+  padding: 1rem;
+  border-radius: 4px;
+  border-width: 2px;
+  border-style: solid;
+  margin-bottom: 1rem;
+}
+.percentile-card.unlucky {
+  background-color: rgba(237,66,69,0.1);
+  border-color: var(--red);
+}
+.percentile-card.average {
+  background-color: rgba(250,166,26,0.1);
+  border-color: var(--yellow);
+}
+.percentile-card.lucky {
+  background-color: rgba(59,165,92,0.1);
+  border-color: var(--green);
+}

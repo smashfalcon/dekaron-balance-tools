@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Upgrade Simulator</title>
+  <!-- Chart.js CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+  <!-- Shared common CSS -->
+  <link rel="stylesheet" href="../assets/css/common.css">
+  <!-- Simulator-specific CSS -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Upgrade Simulator</h1>
+
+    <!-- Configuration Card -->
+    <div class="card mb-3">
+      <h2>Upgrade Configuration</h2>
+      <div class="table-container mb-3">
+        <table id="configurationTable">
+          <thead>
+            <tr>
+              <th>Plus</th>
+              <th class="text-right">Base Success Rate</th>
+              <th>Talisman</th>
+              <th class="text-right">Total Success Rate</th>
+              <th class="text-right">Compound Success Rate</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Table rows will be added dynamically -->
+          </tbody>
+        </table>
+      </div>
+      <div class="grid grid-2">
+        <div class="form-group">
+          <label for="startingPoint">Starting Point</label>
+          <select id="startingPoint">
+            <option value="0" selected>+0</option>
+            <option value="1">+1</option>
+            <option value="2">+2</option>
+            <option value="3">+3</option>
+            <option value="4">+4</option>
+            <option value="5">+5</option>
+            <option value="6">+6</option>
+            <option value="7">+7</option>
+            <option value="8">+8</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="targetPlus">Target Plus Level</label>
+          <select id="targetPlus">
+            <option value="1">+1</option>
+            <option value="2">+2</option>
+            <option value="3">+3</option>
+            <option value="4">+4</option>
+            <option value="5">+5</option>
+            <option value="6">+6</option>
+            <option value="7">+7</option>
+            <option value="8">+8</option>
+            <option value="9" selected>+9</option>
+          </select>
+          <div id="targetError" class="error"></div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="confidenceLevel">Confidence Level (%)</label>
+        <input type="number" id="confidenceLevel" min="1" max="99.99" step="0.01" value="95" />
+      </div>
+      <div class="form-group">
+        <label for="numSimulatedPlayers">Number of Simulated Players</label>
+        <input type="number" id="numSimulatedPlayers" min="1" max="100000" value="1000" />
+      </div>
+      <button id="runSimulationButton">Run Simulation</button>
+    </div>
+
+    <!-- Theoretical Results Card -->
+    <div class="card mb-3">
+      <h2>Theoretical Results</h2>
+      <div id="resultsContainer" class="mb-3">
+        <!-- Results will display here -->
+      </div>
+    </div>
+
+    <!-- Theoretical Probability Chart Card -->
+    <div class="card mb-3">
+      <h2>Theoretical Probability Distribution</h2>
+      <div class="chart-container">
+        <canvas id="probabilityChart"></canvas>
+      </div>
+      <div id="confidenceInfo" class="mb-2 mt-2 text-center">
+        <!-- Confidence level info will be displayed here -->
+      </div>
+    </div>
+
+    <!-- Simulation Results: Distribution of Attempts -->
+    <div class="card mb-3">
+      <h2>Simulation Results: Distribution of Final Attempts</h2>
+      <div class="chart-container">
+        <canvas id="attemptsDistributionChart"></canvas>
+      </div>
+      <div class="text-center text-muted mt-2">
+        Number of Attempts to Reach Target (in up to 20 ranges)
+      </div>
+    </div>
+
+    <!-- Player Experience Insights -->
+    <div class="card mb-3">
+      <h2>Player Experience Insights</h2>
+      <div class="grid grid-3" id="experienceInsights">
+        <div class="percentile-card lucky">
+          <h4>Lucky Players (5th Percentile)</h4>
+          <p class="text-muted">
+            Attempts: <strong id="luckyAttempts">0</strong>
+          </p>
+          <p class="text-muted">
+            Empirical Success Rate: <strong id="luckySuccessRate">0%</strong>
+          </p>
+        </div>
+        <div class="percentile-card average">
+          <h4>Average Players (50th Percentile)</h4>
+          <p class="text-muted">
+            Attempts: <strong id="avgAttempts">0</strong>
+          </p>
+          <p class="text-muted">
+            Empirical Success Rate: <strong id="avgSuccessRate">0%</strong>
+          </p>
+        </div>
+        <div class="percentile-card unlucky">
+          <h4>Unlucky Players (95th Percentile)</h4>
+          <p class="text-muted">
+            Attempts: <strong id="unluckyAttempts">0</strong>
+          </p>
+          <p class="text-muted">
+            Empirical Success Rate: <strong id="unluckySuccessRate">0%</strong>
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- Load simulator-specific JavaScript -->
+  <script src="js/script.js"></script>
+</body>
+</html>

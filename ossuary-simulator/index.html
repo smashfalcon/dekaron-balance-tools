@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ossuary Simulator</title>
+  <!-- Chart.js CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+  <!-- Shared common CSS -->
+  <link rel="stylesheet" href="../assets/css/common.css">
+  <!-- Simulator-specific CSS -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Ossuary Simulator</h1>
+
+    <!-- Simulation Configuration -->
+    <div class="card">
+      <h2>Simulation Configuration</h2>
+      <label>Talisman Drop Rates (%)</label>
+      <div class="grid grid-2" id="dropRatesInputs"></div>
+      <div id="rateError" class="error"></div>
+      <div id="totalRate" style="color:var(--text-secondary); margin-bottom:1rem;">
+        Total: 100% (must equal 100%)
+      </div>
+      <div class="grid grid-2">
+        <div class="form-group">
+          <label for="numChests">Number of Chests per Player</label>
+          <input type="number" id="numChests" min="1" max="1000" value="10"/>
+        </div>
+        <div class="form-group">
+          <label for="numSimulations">Number of Simulated Players</label>
+          <input type="number" id="numSimulations" min="1" max="10000" value="100"/>
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="ossuaryPrice">Ossuary Price</label>
+        <input type="number" id="ossuaryPrice" min="1" value="240"/>
+      </div>
+      <button id="runSimulation">Run Simulation</button>
+    </div>
+
+    <!-- Results: Expected vs. Actual & Distribution -->
+    <div class="grid grid-2">
+      <div class="card">
+        <h2>Expected vs. Actual Drop Rates</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Item</th>
+              <th class="text-right">Expected %</th>
+              <th class="text-right">Actual %</th>
+              <th class="text-right">Avg per Player</th>
+            </tr>
+          </thead>
+          <tbody id="dropRatesTable"></tbody>
+        </table>
+      </div>
+      <div class="card">
+        <h2>Distribution of Final Averages</h2>
+        <div class="chart-container">
+          <canvas id="distributionChart"></canvas>
+        </div>
+        <div style="text-align:center; color:var(--text-secondary); margin-top:0.5rem;">
+          Average Talisman % after <span id="chestsCount">10</span> chests
+        </div>
+      </div>
+    </div>
+
+    <!-- Player Journey Analysis -->
+    <div class="card">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+        <h2>Player Journey Analysis</h2>
+        <div class="checkbox-container">
+          <input type="checkbox" id="showPercentiles" checked/>
+          <label for="showPercentiles">Show Luck Percentiles</label>
+        </div>
+      </div>
+      <h3>Average Value Progression</h3>
+      <div class="chart-container" style="margin-bottom:1rem;">
+        <canvas id="journeyChart"></canvas>
+      </div>
+      <h3>Player Experience Insights</h3>
+      <div class="grid grid-2" style="grid-template-columns:1fr 1fr 1fr; gap:1rem;">
+        <div class="percentile-card unlucky">
+          <h4>Unlucky Players (5th percentile)</h4>
+          <p>Final Average: <strong id="unluckyAvg">0%</strong></p>
+        </div>
+        <div class="percentile-card average">
+          <h4>Average Players (50th percentile)</h4>
+          <p>Final Average: <strong id="avgAvg">0%</strong></p>
+        </div>
+        <div class="percentile-card lucky">
+          <h4>Lucky Players (95th percentile)</h4>
+          <p>Final Average: <strong id="luckyAvg">0%</strong></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Ratio-based Effective Cost Table -->
+    <div class="card">
+      <h2>Effective Cost (Ratio-based)</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Talisman</th>
+            <th class="text-right">Theoretical Cost</th>
+            <th class="text-right">Empirical Cost</th>
+          </tr>
+        </thead>
+        <tbody id="ratioCostTable"></tbody>
+      </table>
+    </div>
+  </div>
+  <!-- Load simulator-specific JavaScript -->
+  <script src="js/script.js"></script>
+</body>
+</html>
